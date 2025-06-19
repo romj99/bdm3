@@ -582,6 +582,10 @@ class InteractiveDataFrameInspector:
         else:
             print("\n✅ Data appears to be in good shape!")
 
+        print("Summary overview:")
+        with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
+            print(self.df.describe())
+
     def display_dashboard(self):
         """Display the interactive dashboard."""
         self.output_widget = widgets.Output()
