@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 A.2 Data Formatting Pipeline - Lab 3: Spark
 Location: /code/A/a2.py
@@ -11,9 +12,12 @@ PIPELINE OVERVIEW:
 5. Validate data integrity
 
 DATASETS PROCESSED:
-- Idealista: Real estate data (JSON) - for now: 21,389 rows × 37 columns
-- Income: Socioeconomic data (CSV) - for now: 811 rows × 7 columns
-- Cultural Sites: Cultural facilities (CSV) - for now: 871 rows × 32 columns
+- Idealista: Real estate data (JSON) - 21,389 rows × 37 columns
+- Income: Socioeconomic data (CSV) - 811 rows × 7 columns
+- Cultural Sites: Cultural facilities (CSV) - 871 rows × 32 columns
+
+AUTHORS: [Group Member Names]
+DATE: June 2025
 """
 
 import logging
@@ -22,7 +26,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import coalesce, col, current_timestamp, lit
+from pyspark.sql.functions import coalesce, col, current_timestamp, lit, when
 from pyspark.sql.types import BooleanType, DoubleType, IntegerType, StringType
 
 
@@ -90,12 +94,9 @@ class DataFormattingPipeline:
         """
         self.logger.info("Processing Idealista dataset...")
 
-        # Read all JSON files from idealista directory
+        # Read all JSON files from idealista directory (without wildcard)
         idealista_path = self.landing_zone_path / "idealista"
-        print(idealista_path)
-        df = self.spark.read.option("multiline", "true").json(
-            str(idealista_path / "*.json")
-        )
+        df = self.spark.read.option("multiline", "true").json(str(idealista_path))
 
         initial_count = df.count()
         self.logger.info(f"Idealista - Read {initial_count} records")
@@ -125,12 +126,12 @@ class DataFormattingPipeline:
             coalesce(col("priceByArea"), lit(0.0))
             .cast(DoubleType())
             .alias("price_per_m2"),
-            # Features
+            # Features (handle complex struct types)
             coalesce(col("exterior"), lit(False))
             .cast(BooleanType())
             .alias("is_exterior"),
             coalesce(col("hasLift"), lit(False)).cast(BooleanType()).alias("has_lift"),
-            coalesce(col("parkingSpace"), lit(False))
+            coalesce(col("parkingSpace.hasParkingSpace"), lit(False))
             .cast(BooleanType())
             .alias("has_parking"),
             # Metadata
@@ -138,7 +139,7 @@ class DataFormattingPipeline:
             lit("idealista").alias("source_dataset"),
         )
 
-        # Apply basic data quality filters
+        # Apply data quality filters
         df_clean = df_formatted.filter(
             (col("price_eur") > 0)
             & (col("size_m2") > 0)
@@ -165,28 +166,62 @@ class DataFormattingPipeline:
 
         # Read all CSV files from income directory
         income_path = self.landing_zone_path / "income"
-        print(income_path)
         df = (
             self.spark.read.option("header", "true")
             .option("inferSchema", "true")
-            .csv(str(income_path / "*.csv"))
+            .csv(str(income_path))
         )
 
         initial_count = df.count()
         self.logger.info(f"Income - Read {initial_count} records")
 
-        # Standardize column names and select relevant fields
-        df_formatted = df.select(
+        # STEP 1: Clean the data first by replacing "-" with empty strings
+        from pyspark.sql.functions import regexp_replace
+
+        df_clean = df
+        for col_name in [
+            "Any",
+            "Codi_Districte",
+            "Codi_Barri",
+            "Població",
+            "Índex RFD Barcelona = 100",
+        ]:
+            df_clean = df_clean.withColumn(
+                col_name, regexp_replace(col(col_name), "^-$", "")
+            )
+
+        # STEP 2: Now apply transformations (checking for empty strings instead of dashes)
+        df_formatted = df_clean.select(
             # Temporal
-            col("Any").cast(IntegerType()).alias("year"),
+            when((col("Any") == "") | col("Any").isNull(), lit(None))
+            .otherwise(col("Any"))
+            .cast(IntegerType())
+            .alias("year"),
             # Geographic identifiers
-            col("Codi_Districte").cast(IntegerType()).alias("district_code"),
+            when(
+                (col("Codi_Districte") == "") | col("Codi_Districte").isNull(),
+                lit(None),
+            )
+            .otherwise(col("Codi_Districte"))
+            .cast(IntegerType())
+            .alias("district_code"),
             col("Nom_Districte").cast(StringType()).alias("district_name"),
-            col("Codi_Barri").cast(IntegerType()).alias("neighborhood_code"),
+            when((col("Codi_Barri") == "") | col("Codi_Barri").isNull(), lit(None))
+            .otherwise(col("Codi_Barri"))
+            .cast(IntegerType())
+            .alias("neighborhood_code"),
             col("Nom_Barri").cast(StringType()).alias("neighborhood_name"),
             # Economic indicators
-            col("Població").cast(DoubleType()).alias("population"),
-            col("Índex RFD Barcelona = 100")
+            when((col("Població") == "") | col("Població").isNull(), lit(None))
+            .otherwise(col("Població"))
+            .cast(DoubleType())
+            .alias("population"),
+            when(
+                (col("Índex RFD Barcelona = 100") == "")
+                | col("Índex RFD Barcelona = 100").isNull(),
+                lit(None),
+            )
+            .otherwise(col("Índex RFD Barcelona = 100"))
             .cast(DoubleType())
             .alias("income_index_bcn_100"),
             # Metadata
@@ -212,11 +247,10 @@ class DataFormattingPipeline:
 
         # Read all CSV files from cultural-sites directory
         cultural_path = self.landing_zone_path / "cultural-sites"
-        print(cultural_path)
         df = (
             self.spark.read.option("header", "true")
             .option("inferSchema", "true")
-            .csv(str(cultural_path / "*.csv"))
+            .csv(str(cultural_path))
         )
 
         initial_count = df.count()
@@ -302,7 +336,7 @@ class DataFormattingPipeline:
 
             # Initialize Spark
             self.initialize_spark()
-            print("huhu")
+
             # Create output directory
             self.create_formatted_zone()
 
