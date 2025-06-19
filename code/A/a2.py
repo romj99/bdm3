@@ -22,7 +22,14 @@ from pathlib import Path
 from typing import Any, Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import coalesce, col, current_timestamp, lit, when
+from pyspark.sql.functions import (
+    coalesce,
+    col,
+    current_timestamp,
+    from_utc_timestamp,
+    lit,
+    when,
+)
 from pyspark.sql.types import BooleanType, DoubleType, IntegerType, StringType
 
 
@@ -131,7 +138,7 @@ class DataFormattingPipeline:
             .cast(BooleanType())
             .alias("has_parking"),
             # Metadata
-            current_timestamp().alias("load_timestamp"),
+            from_utc_timestamp(current_timestamp(), "UTC").alias("load_timestamp"),
             lit("idealista").alias("source_dataset"),
         )
 
@@ -213,15 +220,15 @@ class DataFormattingPipeline:
             .cast(DoubleType())
             .alias("population"),
             when(
-                (col("Índex RFD Barcelona = 100") == "")
-                | col("Índex RFD Barcelona = 100").isNull(),
+                (col("`Índex RFD Barcelona = 100`") == "")
+                | col("`Índex RFD Barcelona = 100`").isNull(),
                 lit(None),
             )
-            .otherwise(col("Índex RFD Barcelona = 100"))
+            .otherwise(col("`Índex RFD Barcelona = 100`"))
             .cast(DoubleType())
             .alias("income_index_bcn_100"),
             # Metadata
-            current_timestamp().alias("load_timestamp"),
+            from_utc_timestamp(current_timestamp(), "UTC").alias("load_timestamp"),
             lit("income").alias("source_dataset"),
         )
 
@@ -271,7 +278,7 @@ class DataFormattingPipeline:
             col("values_category").cast(StringType()).alias("category"),
             col("values_value").cast(StringType()).alias("facility_type"),
             # Metadata
-            current_timestamp().alias("load_timestamp"),
+            from_utc_timestamp(current_timestamp(), "UTC").alias("load_timestamp"),
             lit("cultural_sites").alias("source_dataset"),
         )
 
