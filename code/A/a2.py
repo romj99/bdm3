@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 A.2 Data Formatting Pipeline - Lab 3: Spark
 Location: /code/A/a2.py
@@ -15,9 +14,6 @@ DATASETS PROCESSED:
 - Idealista: Real estate data (JSON) - 21,389 rows × 37 columns
 - Income: Socioeconomic data (CSV) - 811 rows × 7 columns
 - Cultural Sites: Cultural facilities (CSV) - 871 rows × 32 columns
-
-AUTHORS: [Group Member Names]
-DATE: June 2025
 """
 
 import logging
