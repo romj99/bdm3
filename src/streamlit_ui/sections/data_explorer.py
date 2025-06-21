@@ -53,8 +53,7 @@ def read_many(path: Path | str) -> pl.DataFrame:
     return pl.concat(dataframes, how="diagonal_relaxed")
 
 
-@st.cache_data
-def read_uploaded_files(uploaded_files) -> Dict[str, pl.DataFrame]:
+def read_uploaded_files(uploaded_files, dataset_name: str) -> Dict[str, pl.DataFrame]:
     """Process uploaded files using the read_many approach."""
     datasets = {}
 
@@ -72,6 +71,8 @@ def read_uploaded_files(uploaded_files) -> Dict[str, pl.DataFrame]:
             elif file_ext == "json":
                 json_files.append(uploaded_file)
 
+        dataframes_to_combine = []
+
         # Process CSV files as a group if any
         if csv_files:
             csv_dir = temp_path / "csv"
@@ -82,7 +83,7 @@ def read_uploaded_files(uploaded_files) -> Dict[str, pl.DataFrame]:
 
             try:
                 csv_df = read_many(csv_dir)
-                datasets["CSV_Combined"] = csv_df
+                dataframes_to_combine.append(csv_df)
             except Exception as e:
                 st.error(f"Error reading CSV files: {e}")
 
@@ -96,9 +97,19 @@ def read_uploaded_files(uploaded_files) -> Dict[str, pl.DataFrame]:
 
             try:
                 json_df = read_many(json_dir)
-                datasets["JSON_Combined"] = json_df
+                dataframes_to_combine.append(json_df)
             except Exception as e:
                 st.error(f"Error reading JSON files: {e}")
+
+        # Combine all dataframes into one dataset
+        if dataframes_to_combine:
+            if len(dataframes_to_combine) == 1:
+                combined_df = dataframes_to_combine[0]
+            else:
+                # Combine CSV and JSON data
+                combined_df = pl.concat(dataframes_to_combine, how="diagonal_relaxed")
+
+            datasets[dataset_name] = combined_df
 
     return datasets
 
@@ -233,6 +244,13 @@ def create_overview_dashboard(df: pl.DataFrame, name: str) -> go.Figure:
     return fig
 
 
+def create_file_hash(uploaded_files) -> str:
+    """Create a hash of uploaded files to detect changes."""
+    if not uploaded_files:
+        return ""
+    return hash(tuple(f.name + str(f.size) for f in uploaded_files))
+
+
 def main():
     st.title("🔍 Data Explorer")
 
@@ -241,17 +259,61 @@ def main():
         st.session_state.datasets = {}
     if "current_dataset" not in st.session_state:
         st.session_state.current_dataset = None
+    if "upload_counter" not in st.session_state:
+        st.session_state.upload_counter = 0
+    if "last_upload_hash" not in st.session_state:
+        st.session_state.last_upload_hash = ""
+    if "last_dataset_name" not in st.session_state:
+        st.session_state.last_dataset_name = ""
 
-    # File upload
-    uploaded_files = st.file_uploader(
-        "Upload CSV or JSON files", type=["csv", "json"], accept_multiple_files=True
-    )
+    # File upload with dataset naming
+    col1, col2 = st.columns([2, 1])
 
-    if uploaded_files:
-        with st.spinner("Processing files..."):
-            datasets = read_uploaded_files(uploaded_files)
-            st.session_state.datasets.update(datasets)
-            st.success(f"Loaded {len(datasets)} dataset(s)")
+    with col2:
+        dataset_name = st.text_input(
+            "Dataset Name", value="Dataset", help="Give your dataset a custom name"
+        )
+
+    with col1:
+        uploaded_files = st.file_uploader(
+            "Upload CSV or JSON files",
+            type=["csv", "json"],
+            accept_multiple_files=True,
+            key=f"file_uploader_{st.session_state.upload_counter}",
+        )
+
+    # Process files only if they've changed
+    if uploaded_files and dataset_name:
+        # Create a hash of the uploaded files to detect changes
+        file_hash = create_file_hash(uploaded_files)
+
+        # Only process if files or dataset name have changed
+        if (
+            st.session_state.last_upload_hash != file_hash
+            or st.session_state.last_dataset_name != dataset_name
+        ):
+            st.session_state.last_upload_hash = file_hash
+            st.session_state.last_dataset_name = dataset_name
+
+            # Show what files are being processed for debugging
+            file_types = [f.name.split(".")[-1].lower() for f in uploaded_files]
+            csv_count = file_types.count("csv")
+            json_count = file_types.count("json")
+
+            with st.spinner("Processing files..."):
+                # Remove any existing dataset with the same name
+                if dataset_name in st.session_state.datasets:
+                    del st.session_state.datasets[dataset_name]
+
+                datasets = read_uploaded_files(uploaded_files, dataset_name)
+                st.session_state.datasets.update(datasets)
+
+                if datasets:
+                    st.success(
+                        f"✅ Loaded {len(uploaded_files)} file(s) ({csv_count} CSV, {json_count} JSON) into dataset '{dataset_name}'"
+                    )
+                else:
+                    st.error("❌ Failed to load any datasets. Please check your files.")
 
     # Dataset selection
     if st.session_state.datasets:
@@ -282,8 +344,16 @@ def main():
                     if selected_cols:
                         for col in selected_cols[:3]:
                             values = df[col].drop_nulls().to_list()
-                            fig = go.Figure(go.Histogram(x=values, title=col))
-                            st.plotly_chart(fig, use_container_width=True)
+                            if values:  # Only create histogram if we have data
+                                fig = go.Figure(go.Histogram(x=values))
+                                fig.update_layout(
+                                    title=f"Distribution of {col}",
+                                    xaxis_title=col,
+                                    yaxis_title="Count",
+                                )
+                                st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No numeric columns found for distribution analysis.")
 
             with tab3:
                 metrics = calculate_quality_metrics(df)
@@ -310,6 +380,10 @@ def main():
                         }
                     )
                     st.dataframe(missing_df, use_container_width=True)
+                else:
+                    st.info("✨ No missing values found in any columns!")
+    else:
+        st.info("👆 Upload some CSV or JSON files to get started!")
 
 
 if __name__ == "__main__":
