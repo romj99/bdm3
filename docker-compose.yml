@@ -36,11 +36,12 @@ services:
       - "8501:8501"
     volumes:
       - ./src/streamlit_ui:/app
-      - ./data_zones:/data_zones
-      - ./src/config.py:/app/config.py
+      - ./data_zones:/app/data_zones
     depends_on:
       - airflow
       - mlflow
+    env_file:
+      - .env
     environment:
       - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
       - SPARK_VERSION=4.0.0

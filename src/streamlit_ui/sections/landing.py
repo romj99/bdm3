@@ -1,6 +1,7 @@
 import os
 import streamlit as st
-from config import DATA_PATHS
+
+LANDING_PATH = os.environ.get("LANDING_ZONE")
 
 
 st.title("🛬 Landing Zone")
@@ -25,7 +26,7 @@ with col1:
 
     elif custom_name and files_uploaded and upload_confirm:
         dataset_name = custom_name.strip().replace(" ", "_").lower()
-        save_dir = os.path.join(DATA_PATHS["landing"], dataset_name)
+        save_dir = os.path.join(LANDING_PATH, dataset_name)
         os.makedirs(save_dir, exist_ok=True)
 
         with st.spinner("Saving files..."):
@@ -41,7 +42,7 @@ with col1:
 
 with col2:
     st.subheader("📁 Landing Zone Explorer")
-    landing_root = DATA_PATHS["landing"]
+    landing_root = LANDING_PATH
 
     for dirpath, dirnames, filenames in os.walk(landing_root):
         level = dirpath.replace(landing_root, "").count(os.sep)
