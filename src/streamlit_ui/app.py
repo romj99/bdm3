@@ -27,7 +27,8 @@ with st.sidebar:
 # Your navigation
 pages = {
     "🏠 Landing Zone": [
-        st.Page("sections/data_explorer.py", title="Data Explorer", default=True),
+        st.Page("sections/landing.py", title="Landing Zone", default=True),
+        st.Page("sections/data_explorer.py", title="Data Explorer"),
     ],
     "📦 Formatted Zone": [
         st.Page("sections/formatted.py", title="Formatted"),
