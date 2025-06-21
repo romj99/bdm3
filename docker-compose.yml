@@ -4,14 +4,15 @@ services:
     container_name: mlflow
     restart: always
     ports:
-      - "5001:5001" #changed from 5000 to 5001 as MacOS has a conflict with port 5000
+      - "5001:5001"
     environment:
       - MLFLOW_TRACKING_URI=http://0.0.0.0:5001
     command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
     volumes:
       - ./outputs/mlruns:/mlruns
+      
   airflow:
-    image: apache/airflow:slim-3.0.2-python3.11
+    image: apache/airflow:3.0.2-python3.11
     container_name: airflow
     restart: always
     depends_on:
@@ -22,9 +23,12 @@ services:
       - ./src/dags:/opt/airflow/dags
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
-      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True # WARNING! Direct login
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
+      - JAVA_HOME=/opt/java/openjdk-21
+      - SPARK_VERSION=4.0.0
+      - PYSPARK_PYTHON=python3
+      - PYSPARK_DRIVER_PYTHON=python3
     command: airflow standalone
-
 
   streamlit:
     build: ./src/streamlit_ui
@@ -35,4 +39,9 @@ services:
     depends_on:
       - airflow
       - mlflow
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+      - SPARK_VERSION=4.0.0
+      - PYSPARK_PYTHON=python3
+      - PYSPARK_DRIVER_PYTHON=python3
     command: streamlit run app.py --server.port 8501 --server.enableCORS=false

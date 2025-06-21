@@ -1,6 +1,6 @@
 """
-Apache Airflow DAG for Barcelona Data Pipeline
-Orchestrates A2 (Data Formatting) and A3 (Data Exploitation) tasks and seperate A4 - but only basic validation
+Apache Airflow DAG for Barcelona Data Pipeline - Compatible with Airflow 2.5+
+Orchestrates A2 (Data Formatting) and A3 (Data Exploitation) tasks
 
 This DAG:
 1. Validates landing zone data availability
@@ -10,25 +10,56 @@ This DAG:
 5. Validates exploitation zone analytics datasets
 6. Sends notifications on success/failure
 
-Dependencies: apache-airflow, pyspark, delta-spark
+Dependencies: apache-airflow>=2.5, pyspark, delta-spark
 """
 
 import logging
-
-# Import your pipeline classes (adjust path as needed)
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from airflow import DAG
+from airflow.configuration import conf
 from airflow.models import Variable
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator  # Updated import
 from airflow.operators.python import PythonOperator
-from airflow.providers.email.operators.email import EmailOperator
 
-sys.path.append("/opt/airflow/dags/pipelines")
-from a2 import DataFormattingPipeline
-from a3 import ExploitationPipeline
+# For email notifications - handle different Airflow versions
+try:
+    from airflow.providers.email.operators.email import EmailOperator
+except ImportError:
+    from airflow.operators.email import EmailOperator
+
+# Import your pipeline classes (adjust path as needed)
+# Make sure the path is correct for your setup
+dag_folder = conf.get("core", "dags_folder")
+pipelines_path = os.path.join(dag_folder, "pipelines")
+if pipelines_path not in sys.path:
+    sys.path.append(pipelines_path)
+
+# Import with error handling
+try:
+    from a2 import DataFormattingPipeline
+    from a3 import ExploitationPipeline
+except ImportError as e:
+    logging.warning(f"Could not import pipeline classes: {e}")
+    logging.warning("Make sure a2.py and a3.py are in the pipelines/ directory")
+
+    # Create dummy classes for DAG parsing
+    class DataFormattingPipeline:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def run_pipeline(self):
+            return {}
+
+    class ExploitationPipeline:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def run_pipeline(self):
+            return {}
 
 # DAG Configuration
 DAG_ID = "bcn_data_pipeline"
@@ -51,20 +82,33 @@ dag = DAG(
     DAG_ID,
     default_args=default_args,
     description=DESCRIPTION,
-    schedule_interval="@daily",  # Run daily
+    schedule="@daily",  # Updated from schedule_interval
     catchup=False,
     max_active_runs=1,
     tags=["barcelona", "real-estate", "spark", "delta-lake"],
 )
 
 # Configuration from Airflow Variables (set these in Airflow UI)
-LANDING_ZONE_PATH = Variable.get("bcn_landing_zone_path", "/data/landing_zone")
-FORMATTED_ZONE_PATH = Variable.get("bcn_formatted_zone_path", "/data/formatted_zone")
-EXPLOITATION_ZONE_PATH = Variable.get(
-    "bcn_exploitation_zone_path", "/data/exploitation_zone"
-)
-NOTIFICATION_EMAIL = Variable.get("bcn_notification_email", "admin@company.com")
+def get_variable_with_default(key: str, default: str) -> str:
+    """Get Airflow variable with fallback to default."""
+    try:
+        return Variable.get(key, default)
+    except Exception:
+        logging.warning(f"Could not get variable {key}, using default: {default}")
+        return default
 
+LANDING_ZONE_PATH = get_variable_with_default(
+    "bcn_landing_zone_path", "/opt/airflow/data/landing_zone"
+)
+FORMATTED_ZONE_PATH = get_variable_with_default(
+    "bcn_formatted_zone_path", "/opt/airflow/data/formatted_zone"
+)
+EXPLOITATION_ZONE_PATH = get_variable_with_default(
+    "bcn_exploitation_zone_path", "/opt/airflow/data/exploitation_zone"
+)
+NOTIFICATION_EMAIL = get_variable_with_default(
+    "bcn_notification_email", "admin@company.com"
+)
 
 # Helper Functions
 def validate_landing_zone(**context):
@@ -105,11 +149,6 @@ def validate_landing_zone(**context):
         raise ValueError(f"Missing required datasets: {missing_datasets}")
 
     # Push results to XCom for downstream tasks
-    context["task_instance"].xcom_push(
-        key="landing_zone_validation", value=validation_results
-    )
-
-    logging.info("Landing zone validation completed successfully")
     return validation_results
 
 
@@ -124,9 +163,6 @@ def run_data_formatting(**context):
         )
 
         results = pipeline.run_pipeline()
-
-        # Push results to XCom
-        context["task_instance"].xcom_push(key="formatting_results", value=results)
 
         # Log summary
         total_records = sum(
@@ -151,8 +187,11 @@ def validate_formatted_zone(**context):
 
     # Get formatting results from previous task
     formatting_results = context["task_instance"].xcom_pull(
-        task_ids="run_data_formatting", key="formatting_results"
+        task_ids="run_data_formatting"
     )
+
+    if not formatting_results:
+        raise ValueError("No formatting results found from previous task")
 
     validation_results = {}
 
@@ -197,10 +236,6 @@ def validate_formatted_zone(**context):
     if failed_datasets:
         raise ValueError(f"Data quality validation failed for: {failed_datasets}")
 
-    context["task_instance"].xcom_push(
-        key="formatted_zone_validation", value=validation_results
-    )
-
     return validation_results
 
 
@@ -216,9 +251,6 @@ def run_data_exploitation(**context):
         )
 
         results = pipeline.run_pipeline()
-
-        # Push results to XCom
-        context["task_instance"].xcom_push(key="exploitation_results", value=results)
 
         # Log summary
         total_datasets = len(
@@ -251,8 +283,11 @@ def validate_exploitation_zone(**context):
 
     # Get exploitation results from previous task
     exploitation_results = context["task_instance"].xcom_pull(
-        task_ids="run_data_exploitation", key="exploitation_results"
+        task_ids="run_data_exploitation"
     )
+
+    if not exploitation_results:
+        raise ValueError("No exploitation results found from previous task")
 
     # Expected analytics datasets
     expected_datasets = [
@@ -299,10 +334,6 @@ def validate_exploitation_zone(**context):
     if failed_datasets:
         raise ValueError(f"Analytics validation failed for: {failed_datasets}")
 
-    context["task_instance"].xcom_push(
-        key="exploitation_validation", value=validation_results
-    )
-
     return validation_results
 
 
@@ -312,35 +343,31 @@ def generate_pipeline_report(**context):
 
     # Collect results from all previous tasks
     landing_validation = context["task_instance"].xcom_pull(
-        task_ids="validate_landing_zone", key="landing_zone_validation"
+        task_ids="validate_landing_zone"
     )
 
     formatting_results = context["task_instance"].xcom_pull(
-        task_ids="run_data_formatting", key="formatting_results"
+        task_ids="run_data_formatting"
     )
 
     exploitation_results = context["task_instance"].xcom_pull(
-        task_ids="run_data_exploitation", key="exploitation_results"
+        task_ids="run_data_exploitation"
     )
 
     # Generate report
     report = {
         "execution_date": context["ds"],
         "dag_run_id": context["dag_run"].run_id,
-        "total_duration_minutes": None,  # Calculate if needed
-        "landing_zone_datasets": len(landing_validation),
-        "formatted_datasets": len(formatting_results),
-        "analytics_datasets": len(exploitation_results),
+        "landing_zone_datasets": len(landing_validation) if landing_validation else 0,
+        "formatted_datasets": len(formatting_results) if formatting_results else 0,
+        "analytics_datasets": len(exploitation_results) if exploitation_results else 0,
         "total_records_processed": sum(
             stats.get("record_count", 0)
-            for stats in formatting_results.values()
+            for stats in (formatting_results or {}).values()
             if isinstance(stats, dict) and "record_count" in stats
         ),
         "status": "SUCCESS",
     }
-
-    # Push report to XCom
-    context["task_instance"].xcom_push(key="pipeline_report", value=report)
 
     logging.info(f"Pipeline Report: {report}")
     return report
@@ -394,28 +421,38 @@ generate_report = PythonOperator(
     dag=dag,
 )
 
-# 7. Success Notification
-success_notification = EmailOperator(
-    task_id="send_success_notification",
-    to=[NOTIFICATION_EMAIL],
-    subject="✅ BCN Data Pipeline - Execution Successful",
-    html_content="""
-    <h3>Barcelona Data Pipeline Execution Completed Successfully</h3>
-    <p><strong>Execution Date:</strong> {{ ds }}</p>
-    <p><strong>DAG Run ID:</strong> {{ dag_run.run_id }}</p>
-    <p>All data processing stages completed without errors.</p>
-    <p>Check the exploitation zone for updated analytics datasets.</p>
-    """,
-    dag=dag,
-)
+# 7. Success Notification (optional - only if email is configured)
+try:
+    success_notification = EmailOperator(
+        task_id="send_success_notification",
+        to=[NOTIFICATION_EMAIL],
+        subject="✅ BCN Data Pipeline - Execution Successful",
+        html_content="""
+        <h3>Barcelona Data Pipeline Execution Completed Successfully</h3>
+        <p><strong>Execution Date:</strong> {{ ds }}</p>
+        <p><strong>DAG Run ID:</strong> {{ dag_run.run_id }}</p>
+        <p>All data processing stages completed without errors.</p>
+        <p>Check the exploitation zone for updated analytics datasets.</p>
+        """,
+        dag=dag,
+    )
+    email_configured = True
+except Exception as e:
+    logging.warning(f"Email operator not available: {e}")
+    # Create a dummy task instead
+    success_notification = EmptyOperator(
+        task_id="send_success_notification",
+        dag=dag,
+    )
+    email_configured = False
 
 # 8. Start and End markers
-start_pipeline = DummyOperator(
+start_pipeline = EmptyOperator(
     task_id="start_pipeline",
     dag=dag,
 )
 
-end_pipeline = DummyOperator(
+end_pipeline = EmptyOperator(
     task_id="end_pipeline",
     dag=dag,
 )
@@ -433,18 +470,9 @@ end_pipeline = DummyOperator(
     >> end_pipeline
 )
 
-# Optional: Parallel validation tasks (alternative approach)
-# Could also group related validations together:
-"""
-Alternative dependency structure with task groups:
-
-with TaskGroup('data_formatting_group', dag=dag) as formatting_group:
-    format_data
-    validate_formatted
-
-with TaskGroup('data_exploitation_group', dag=dag) as exploitation_group:
-    exploit_data
-    validate_exploitation
-
-start_pipeline >> validate_landing >> formatting_group >> exploitation_group >> generate_report >> success_notification >> end_pipeline
-"""
+# Log DAG configuration
+logging.info("BCN Data Pipeline DAG configured:")
+logging.info(f"  Landing Zone: {LANDING_ZONE_PATH}")
+logging.info(f"  Formatted Zone: {FORMATTED_ZONE_PATH}")
+logging.info(f"  Exploitation Zone: {EXPLOITATION_ZONE_PATH}")
+logging.info(f"  Email configured: {email_configured}")

@@ -2,3 +2,7 @@ streamlit>=1.4.0
 polars>=1.0.0
 plotly>=5.15.0
 numpy>=2.0.0
+pyspark==4.0.0
+delta-spark==4.0.0
+apache-airflow==3.0.2
+py4j>=0.10.9.7
