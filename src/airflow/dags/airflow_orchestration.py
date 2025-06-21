@@ -26,34 +26,10 @@ from airflow.providers.standard.operators.bash import BashOperator
 
 # Airflow 3.0+ imports using the new Task SDK
 from airflow.sdk import dag, task
+from a2 import DataFormattingPipeline
+from a3 import ExploitationPipeline
 
-# Import your pipeline classes with error handling
-dag_folder = conf.get("core", "dags_folder")
-pipelines_path = os.path.join(dag_folder, "pipelines")
-if pipelines_path not in sys.path:
-    sys.path.append(pipelines_path)
 
-try:
-    from pipelines.a2 import DataFormattingPipeline
-    from pipelines.a3 import ExploitationPipeline
-except ImportError as e:
-    logging.warning(f"Could not import pipeline classes: {e}")
-    logging.warning("Make sure a2.py and a3.py are in the pipelines/ directory")
-
-    # Create dummy classes for DAG parsing
-    class DataFormattingPipeline:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def run_pipeline(self):
-            return {}
-
-    class ExploitationPipeline:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def run_pipeline(self):
-            return {}
 
 
 # DAG Configuration
@@ -79,26 +55,10 @@ NOTIFICATION_EMAIL = os.getenv("EMAIL", "admin@company.com")
         "depends_on_past": False,
         "email_on_failure": True,
         "email_on_retry": False,
-        "retries": 2,
+        "retries": 1,
         "retry_delay": timedelta(minutes=5),
         "email": [NOTIFICATION_EMAIL],
     },
-    # Airflow 3.0 specific configurations
-    doc_md="""
-    ## Barcelona Data Pipeline - Airflow 3.0
-    
-    This pipeline processes Barcelona housing, income, and cultural data through:
-    1. **Landing Zone Validation** - Ensures raw data availability
-    2. **Data Formatting (A2)** - Converts raw data to standardized Delta tables
-    3. **Data Exploitation (A3)** - Creates analytics datasets for KPI calculations
-    
-    ### Key Features:
-    - ✅ Airflow 3.0 Task SDK compatibility
-    - ✅ Modern TaskFlow API with decorators
-    - ✅ Comprehensive data validation
-    - ✅ Error handling and notifications
-    - ✅ DAG versioning support
-    """,
 )
 def bcn_data_pipeline():
     """
@@ -111,7 +71,7 @@ def bcn_data_pipeline():
     - Comprehensive logging and monitoring
     """
 
-    @task(task_id="validate_landing_zone", retries=1, retry_delay=timedelta(minutes=2))
+    @task(task_id="validate_landing_zone", retries=0, retry_delay=timedelta(minutes=2))
     def validate_landing_zone() -> Dict[str, Any]:
         """
         Validate that required datasets exist in landing zone.
@@ -143,7 +103,7 @@ def bcn_data_pipeline():
                     "file_count": 0,
                     "path": str(dataset_path),
                 }
-                logging.error(f"❌ {dataset}: Directory not found")
+                logging.warning(f"❌ {dataset}: Directory not found")
 
         # Check if all required datasets are available
         missing_datasets = [
@@ -159,7 +119,7 @@ def bcn_data_pipeline():
     @task(
         task_id="run_data_formatting",
         execution_timeout=timedelta(hours=2),
-        retries=2,
+        retries=0,
         retry_delay=timedelta(minutes=10),
     )
     def run_data_formatting(validation_results: Dict[str, Any]) -> Dict[str, Any]:
@@ -199,7 +159,7 @@ def bcn_data_pipeline():
             logging.error(f"❌ A2 Pipeline failed: {str(e)}")
             raise AirflowException(f"Data formatting pipeline failed: {str(e)}")
 
-    @task(task_id="validate_formatted_zone", retries=1)
+    @task(task_id="validate_formatted_zone", retries=0)
     def validate_formatted_zone(formatting_results: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate formatted zone data quality.
@@ -267,7 +227,7 @@ def bcn_data_pipeline():
     @task(
         task_id="run_data_exploitation",
         execution_timeout=timedelta(hours=2),
-        retries=2,
+        retries=0,
         retry_delay=timedelta(minutes=10),
     )
     def run_data_exploitation(validation_results: Dict[str, Any]) -> Dict[str, Any]:
@@ -315,7 +275,7 @@ def bcn_data_pipeline():
             logging.error(f"❌ A3 Pipeline failed: {str(e)}")
             raise AirflowException(f"Data exploitation pipeline failed: {str(e)}")
 
-    @task(task_id="validate_exploitation_zone", retries=1)
+    @task(task_id="validate_exploitation_zone", retries=0)
     def validate_exploitation_zone(
         exploitation_results: Dict[str, Any],
     ) -> Dict[str, Any]:
