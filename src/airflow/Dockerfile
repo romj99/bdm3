@@ -23,3 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Ensure environment is loaded for airflow processes
 RUN echo "source /etc/environment" >> ~/.bashrc
+
+ENV SPARK_EXECUTOR_MEMORY=4g
+ENV SPARK_DRIVER_MEMORY=4g

@@ -29,9 +29,6 @@ from airflow.sdk import dag, task
 from a2 import DataFormattingPipeline
 from a3 import ExploitationPipeline
 
-
-
-
 # DAG Configuration
 LANDING_ZONE_PATH = os.getenv("LANDING_ZONE", "/opt/airflow/data/landing_zone")
 FORMATTED_ZONE_PATH = os.getenv("FORMATTED_ZONE", "/opt/airflow/data/formatted_zone")
