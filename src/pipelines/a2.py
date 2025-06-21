@@ -116,8 +116,8 @@ class DataFormattingPipeline:
         initial_count = df.count()
         self.logger.info(f"Idealista - Read {initial_count} records")
 
-        # Select and standardize key columns
-        df_formatted = df.select(
+        # Select and standardize key columns - only keep unique rows
+        df_formatted = df.distinct().select(
             # Identifiers
             col("propertyCode").cast(StringType()).alias("property_code"),
             col("url").cast(StringType()).alias("property_url"),
@@ -193,7 +193,8 @@ class DataFormattingPipeline:
         # STEP 1: Clean the data first by replacing "-" with empty strings
         from pyspark.sql.functions import regexp_replace
 
-        df_clean = df
+        # Only keep unique rows
+        df_clean = df.distinct()
         for col_name in [
             "Any",
             "Codi_Districte",
@@ -271,8 +272,8 @@ class DataFormattingPipeline:
         initial_count = df.count()
         self.logger.info(f"Cultural Sites - Read {initial_count} records")
 
-        # Select and standardize key columns
-        df_formatted = df.select(
+        # Select and standardize key columns - only keep unique rows
+        df_formatted = df.distinct().select(
             # Identifiers
             col("_id").cast(StringType()).alias("site_id"),
             col("name").cast(StringType()).alias("facility_name"),
@@ -381,17 +382,17 @@ def main() -> int:
 
     load_dotenv()
 
-    print(os.getenv("LANDING_PATH"))
+    print(os.getenv("LANDING_ZONE"))
 
     # Default paths for the expected structure
     LANDING_ZONE_PATH = (
-        os.getenv("LANDING_PATH")
+        os.getenv("LANDING_ZONE")
         or input("Enter Landing Zone path (press Enter for 'landing_zone'): ").strip()
         or "landing_zone"
     )
 
     FORMATTED_ZONE_PATH = (
-        os.getenv("FORMATTED_PATH")
+        os.getenv("FORMATTED_ZONE")
         or input(
             "Enter Formatted Zone path (press Enter for 'formatted_zone'): "
         ).strip()

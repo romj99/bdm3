@@ -7,7 +7,12 @@ This guide explains how to deploy and configure our A2 and A3 Spark pipelines wi
 ### Required Dependencies
 
 ```bash
-uv sync
+docker compose build
+
+docker compose up
+
+# For local testing use uv if you don't have docker available
+# uv sync
 
 # This will inter alia install the following needed dependencies:
 

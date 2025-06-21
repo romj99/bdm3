@@ -818,7 +818,7 @@ def main() -> int:
 
     # Get paths from user
     FORMATTED_ZONE_PATH = (
-        os.getenv("FORMATTED_PATH")
+        os.getenv("FORMATTED_ZONE")
         or input(
             "Enter Formatted Zone path (press Enter for 'formatted_zone'): "
         ).strip()
@@ -826,7 +826,7 @@ def main() -> int:
     )
 
     EXPLOITATION_ZONE_PATH = (
-        os.getenv("EXPLOITATION_PATH")
+        os.getenv("EXPLOITATION_ZONE")
         or input(
             "Enter Exploitation Zone path (press Enter for 'exploitation_zone'): "
         ).strip()
