@@ -7,14 +7,10 @@ services:
       - "5001:5001"
     environment:
       - MLFLOW_TRACKING_URI=http://0.0.0.0:5001
-      # Data paths - consistent across all services
-      - LANDING_ZONE=/data_zones/01_landing
-      - FORMATTED_ZONE=/data_zones/02_formatted
-      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
     volumes:
       - ./outputs/mlruns:/mlruns
-      - ./data_zones:/data_zones  # Shared data access
+      - ./data_zones:/data_zones
     env_file:
       - .env
     networks:
@@ -41,14 +37,10 @@ services:
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64  # Standardize on Java 17
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-      # Data paths - consistent across all services
-      - LANDING_ZONE=/data_zones/01_landing
-      - FORMATTED_ZONE=/data_zones/02_formatted
-      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: airflow standalone
     networks:
       - ml_platform
@@ -59,8 +51,8 @@ services:
       - "8501:8501"
     volumes:
       - ./src/streamlit_ui:/app
-      - ./src/utils:/app/utils  # Shared utilities
-      - ./data_zones:/data_zones  # Shared data access
+      - ./src/utils:/app/utils 
+      - ./data_zones:/data_zones
     depends_on:
       - airflow
       - mlflow
@@ -71,10 +63,6 @@ services:
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-      # Data paths - consistent across all services
-      - LANDING_ZONE=/data_zones/01_landing
-      - FORMATTED_ZONE=/data_zones/02_formatted
-      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: streamlit run app.py --server.port 8501 --server.enableCORS=false
     networks:
       - ml_platform

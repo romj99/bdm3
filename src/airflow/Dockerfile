@@ -9,10 +9,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME for OpenJDK 17 (consistent with other services)
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH=$PATH:$JAVA_HOME/bin
-
 USER airflow
 
 COPY requirements.txt ./
