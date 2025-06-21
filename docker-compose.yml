@@ -1,6 +1,6 @@
 services:
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v3.0.0
+    image: ghcr.io/mlflow/mlflow:v3.1.0
     container_name: mlflow
     restart: always
     ports:
@@ -10,6 +10,7 @@ services:
     command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
     volumes:
       - ./outputs/mlruns:/mlruns
+      - ./data_zones:/data_zones  # Shared data access
     env_file:
       - .env
       
@@ -26,15 +27,21 @@ services:
     volumes:
       - ./src/airflow/dags:/opt/airflow/dags
       - ./src/pipelines:/opt/airflow/plugins
+      - ./data_zones:/data_zones  # Shared data access
+      - ./src/utils:/opt/airflow/utils  # Shared utilities
     env_file:
       - .env
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
-      - JAVA_HOME=/opt/java/openjdk-21
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64  # Standardize on Java 17
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
+      # Data paths - consistent across all services
+      - LANDING_ZONE=/data_zones/01_landing
+      - FORMATTED_ZONE=/data_zones/02_formatted
+      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: airflow standalone
 
   streamlit:
@@ -43,15 +50,20 @@ services:
       - "8501:8501"
     volumes:
       - ./src/streamlit_ui:/app
-      - ./data_zones:/app/data_zones
+      - ./src/utils:/app/utils  # Shared utilities
+      - ./data_zones:/data_zones  # Shared data access
     depends_on:
       - airflow
       - mlflow
     env_file:
       - .env
     environment:
-      - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64  # Standardize on Java 17
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
+      # Data paths - consistent across all services
+      - LANDING_ZONE=/data_zones/01_landing
+      - FORMATTED_ZONE=/data_zones/02_formatted
+      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: streamlit run app.py --server.port 8501 --server.enableCORS=false
