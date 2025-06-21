@@ -32,7 +32,7 @@ services:
       - "8501:8501"
     volumes:
       - ./src/streamlit_ui:/app
-      - ./data_zones:/app
     depends_on:
       - airflow
       - mlflow
+    command: streamlit run app.py --server.port 8501 --server.enableCORS=false
