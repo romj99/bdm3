@@ -29,7 +29,6 @@ services:
     volumes:
       - ./src/airflow/dags:/opt/airflow/dags
       - ./src/pipelines:/opt/airflow/plugins
-      - ./src/ml_experiments:/opt/airflow/plugins/ml_experiments
       - ./data_zones:/data_zones
       - ./src/utils:/opt/airflow/utils
     env_file:
