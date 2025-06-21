@@ -15,11 +15,10 @@ DATASETS PROCESSED:
 - Income: Socioeconomic data (CSV) - 811 rows × 7 columns
 - Cultural Sites: Cultural facilities (CSV) - 871 rows × 32 columns
 """
-
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
@@ -41,10 +40,15 @@ class DataFormattingPipeline:
     and converts them to standardized Delta tables in the Formatted Zone.
     """
 
-    def __init__(self, landing_zone_path: str, formatted_zone_path: str) -> None:
-        """Initialize the pipeline with source and target paths."""
+    def __init__(
+        self,
+        landing_zone_path: str,
+        formatted_zone_path: str,
+        spark_master: Optional[str] = None,
+    ):
         self.landing_zone_path = Path(landing_zone_path)
         self.formatted_zone_path = Path(formatted_zone_path)
+        self.spark_master = spark_master or "local[*]"
         self.spark: SparkSession = None
         self.logger = self._setup_logging()
 
@@ -61,25 +65,30 @@ class DataFormattingPipeline:
         return logging.getLogger(__name__)
 
     def initialize_spark(self) -> None:
-        """Initialize Spark session with Delta Lake 4.0 support."""
+        """Initialize Spark session with Airflow compatibility."""
         try:
             builder = (
-                SparkSession.builder.appName("BCN_DataFormattingPipeline")
+                SparkSession.builder.appName("BCN_DataFormattingPipeline_Airflow")
+                .master(self.spark_master)
                 .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0")
                 .config(
-                    "spark.sql.extensions",
-                    "io.delta.sql.DeltaSparkSessionExtension",
+                    "spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension"
                 )
                 .config(
                     "spark.sql.catalog.spark_catalog",
                     "org.apache.spark.sql.delta.catalog.DeltaCatalog",
                 )
+                .config("spark.sql.adaptive.enabled", "true")
+                .config(
+                    "spark.serializer", "org.apache.spark.serializer.KryoSerializer"
+                )
+                # Airflow-specific configs
+                .config("spark.sql.execution.arrow.pyspark.enabled", "true")
             )
 
-            # Create session directly without configure_spark_with_delta_pip for 4.0
             self.spark = builder.getOrCreate()
             self.spark.sparkContext.setLogLevel("WARN")
-            self.logger.info("Spark session initialized with Delta Lake 4.0 support")
+            self.logger.info("Spark session initialized for Airflow execution")
 
         except Exception as e:
             self.logger.error(f"Failed to initialize Spark: {str(e)}")

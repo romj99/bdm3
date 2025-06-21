@@ -28,7 +28,7 @@ DATASETS CREATED:
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
@@ -67,10 +67,16 @@ class ExploitationPipeline:
     the specific KPIs and analytical objectives identified in A.1.
     """
 
-    def __init__(self, formatted_zone_path: str, exploitation_zone_path: str) -> None:
+    def __init__(
+        self,
+        formatted_zone_path: str,
+        exploitation_zone_path: str,
+        spark_master: Optional[str] = None,
+    ) -> None:
         """Initialize the pipeline with source and target paths."""
         self.formatted_zone_path = Path(formatted_zone_path)
         self.exploitation_zone_path = Path(exploitation_zone_path)
+        self.spark_master = spark_master or "local[*]"
         self.spark: SparkSession = None
         self.logger = self._setup_logging()
 
@@ -90,7 +96,8 @@ class ExploitationPipeline:
         """Initialize Spark session with Delta Lake 4.0 support."""
         try:
             builder = (
-                SparkSession.builder.appName("BCN_ExploitationPipeline")
+                SparkSession.builder.appName("BCN_ExploitationPipeline_Airflow")
+                .master(self.spark_master or "local[*]")
                 .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0")
                 .config(
                     "spark.sql.extensions",
