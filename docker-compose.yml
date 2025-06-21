@@ -7,12 +7,18 @@ services:
       - "5001:5001"
     environment:
       - MLFLOW_TRACKING_URI=http://0.0.0.0:5001
+      # Data paths - consistent across all services
+      - LANDING_ZONE=/data_zones/01_landing
+      - FORMATTED_ZONE=/data_zones/02_formatted
+      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
     volumes:
       - ./outputs/mlruns:/mlruns
       - ./data_zones:/data_zones  # Shared data access
     env_file:
       - .env
+    networks:
+      - ml_platform
       
   airflow:
     build:
@@ -27,8 +33,9 @@ services:
     volumes:
       - ./src/airflow/dags:/opt/airflow/dags
       - ./src/pipelines:/opt/airflow/plugins
-      - ./data_zones:/data_zones  # Shared data access
-      - ./src/utils:/opt/airflow/utils  # Shared utilities
+      - ./src/ml_experiments:/opt/airflow/plugins/ml_experiments
+      - ./data_zones:/data_zones
+      - ./src/utils:/opt/airflow/utils
     env_file:
       - .env
     environment:
@@ -38,7 +45,13 @@ services:
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
+      # Data paths - consistent across all services
+      - LANDING_ZONE=/data_zones/01_landing
+      - FORMATTED_ZONE=/data_zones/02_formatted
+      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: airflow standalone
+    networks:
+      - ml_platform
 
   streamlit:
     build: ./src/streamlit_ui
@@ -58,4 +71,14 @@ services:
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
+      # Data paths - consistent across all services
+      - LANDING_ZONE=/data_zones/01_landing
+      - FORMATTED_ZONE=/data_zones/02_formatted
+      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: streamlit run app.py --server.port 8501 --server.enableCORS=false
+    networks:
+      - ml_platform
+
+networks:
+  ml_platform:
+    driver: bridge
