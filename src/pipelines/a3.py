@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from dotenv import load_env
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     avg,
@@ -814,7 +814,7 @@ def main() -> int:
     """Main execution function."""
     print("=== Data Exploitation Pipeline - A.3 ===")
 
-    load_env()
+    load_dotenv()
 
     # Get paths from user
     FORMATTED_ZONE_PATH = (
