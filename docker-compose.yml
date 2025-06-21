@@ -36,11 +36,11 @@ services:
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+      # JAVA_HOME is auto-detected in the Dockerfile - no need to set here
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-    command: airflow standalone
+    command: bash -c "source /etc/environment && airflow standalone"
     networks:
       - ml_platform
 
@@ -58,11 +58,11 @@ services:
     env_file:
       - .env
     environment:
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+      # JAVA_HOME is auto-detected in the Dockerfile - no need to set here
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-    command: streamlit run app.py --server.port 8501 --server.enableCORS=false
+    # Command is handled in Dockerfile CMD with environment loading
     networks:
       - ml_platform
 
