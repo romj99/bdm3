@@ -17,10 +17,12 @@ DATASETS PROCESSED:
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     coalesce,
@@ -377,14 +379,22 @@ def main() -> int:
     """Main execution function."""
     print("=== Data Formatting Pipeline - A.2 ===")
 
+    load_dotenv()
+
+    print(os.getenv("LANDING_PATH"))
+
     # Default paths for the expected structure
     LANDING_ZONE_PATH = (
-        input("Enter Landing Zone path (press Enter for 'landing_zone'): ").strip()
+        os.getenv("LANDING_PATH")
+        or input("Enter Landing Zone path (press Enter for 'landing_zone'): ").strip()
         or "landing_zone"
     )
 
     FORMATTED_ZONE_PATH = (
-        input("Enter Formatted Zone path (press Enter for 'formatted_zone'): ").strip()
+        os.getenv("FORMATTED_PATH")
+        or input(
+            "Enter Formatted Zone path (press Enter for 'formatted_zone'): "
+        ).strip()
         or "formatted_zone"
     )
 

@@ -26,10 +26,12 @@ DATASETS CREATED:
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from dotenv import load_env
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     avg,
@@ -812,14 +814,20 @@ def main() -> int:
     """Main execution function."""
     print("=== Data Exploitation Pipeline - A.3 ===")
 
+    load_env()
+
     # Get paths from user
     FORMATTED_ZONE_PATH = (
-        input("Enter Formatted Zone path (press Enter for 'formatted_zone'): ").strip()
+        os.getenv("FORMATTED_PATH")
+        or input(
+            "Enter Formatted Zone path (press Enter for 'formatted_zone'): "
+        ).strip()
         or "formatted_zone"
     )
 
     EXPLOITATION_ZONE_PATH = (
-        input(
+        os.getenv("EXPLOITATION_PATH")
+        or input(
             "Enter Exploitation Zone path (press Enter for 'exploitation_zone'): "
         ).strip()
         or "exploitation_zone"

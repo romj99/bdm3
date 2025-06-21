@@ -6,3 +6,4 @@ pyspark==4.0.0
 delta-spark==4.0.0
 apache-airflow==3.0.2
 py4j>=0.10.9.7
+python-dotenv
