@@ -21,6 +21,7 @@ services:
       - "8080:8080"
     volumes:
       - ./src/dags:/opt/airflow/dags
+      - ./src/pipelines:/opt/airflow/plugins
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
