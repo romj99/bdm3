@@ -1,0 +1,38 @@
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.0.1
+    container_name: mlflow
+    restart: always
+    ports:
+      - "5001:5001" #changed from 5000 to 5001 as MacOS has a conflict with port 5000
+    environment:
+      - MLFLOW_TRACKING_URI=http://0.0.0.0:5001
+    command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
+    volumes:
+      - ./outputs/mlruns:/mlruns
+  airflow:
+    image: apache/airflow:slim-3.0.2-python3.11
+    container_name: airflow
+    restart: always
+    depends_on:
+      - mlflow
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./src/dags:/opt/airflow/dags
+    environment:
+      - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
+      - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True # WARNING! Direct login
+    command: airflow standalone
+
+
+  streamlit:
+    build: ./src/streamlit_ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src/streamlit_ui:/app
+      - ./data_zones:/app
+    depends_on:
+      - airflow
+      - mlflow
