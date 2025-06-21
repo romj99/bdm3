@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python">
   <img src="https://img.shields.io/badge/PySpark-4.0-orange?logo=apachespark&logoColor=white">
-  <img src="https://img.shields.io/badge/MLflow-2.0.1-blue?logo=mlflow">
+  <img src="https://img.shields.io/badge/MLflow-3.0.0-blue?logo=mlflow">
   <img src="https://img.shields.io/badge/Airflow-3.0.2-darkgreen?logo=apacheairflow">
   <img src="https://img.shields.io/badge/Streamlit-App-red?logo=streamlit">
 </p>
