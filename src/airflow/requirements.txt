@@ -1,2 +1,5 @@
 pyspark
 matplotlib
+seaborn
+pandas
+numpy
