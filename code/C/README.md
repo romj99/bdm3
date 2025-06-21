@@ -130,9 +130,9 @@ mkdir -p /opt/airflow/data/{landing_zone,formatted_zone,exploitation_zone}
 mkdir -p /opt/airflow/data/landing_zone/{idealista,income,cultural-sites}
 
 # Copy our raw data
-cp -r your_data/idealista/* /opt/airflow/data/landing_zone/idealista/
-cp -r your_data/income/* /opt/airflow/data/landing_zone/income/
-cp -r your_data/cultural-sites/* /opt/airflow/data/landing_zone/cultural-sites/
+cp -r data/idealista/* /opt/airflow/data/landing_zone/idealista/
+cp -r data/income/* /opt/airflow/data/landing_zone/income/
+cp -r data/cultural-sites/* /opt/airflow/data/landing_zone/cultural-sites/
 ```
 
 ### 3. Start Airflow Services
