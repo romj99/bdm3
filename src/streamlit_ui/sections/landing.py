@@ -1,6 +1,8 @@
 import os
 import streamlit as st
 from config import DATA_PATHS
+
+
 st.title("🛬 Landing Zone")
 st.write("Drag and drop files to upload them to the Datalake (Landing Zone).")
 
@@ -18,8 +20,10 @@ with col1:
     )
     #add button to upload
     upload_confirm = st.button("Upload Files")
+    if files_uploaded and not custom_name and upload_confirm:
+        st.warning("Please provide a custom name for your dataset.")
 
-    if custom_name and files_uploaded and upload_confirm:
+    elif custom_name and files_uploaded and upload_confirm:
         dataset_name = custom_name.strip().replace(" ", "_").lower()
         save_dir = os.path.join(DATA_PATHS["landing"], dataset_name)
         os.makedirs(save_dir, exist_ok=True)
