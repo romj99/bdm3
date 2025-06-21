@@ -205,3 +205,5 @@ data/
 landing_zone/
 formatted_zone/
 exploitation_zone/
+# Apache Airflow data 
+opt/

@@ -15,6 +15,7 @@ DATASETS PROCESSED:
 - Income: Socioeconomic data (CSV) - 811 rows × 7 columns
 - Cultural Sites: Cultural facilities (CSV) - 871 rows × 32 columns
 """
+
 import logging
 import sys
 from pathlib import Path
