@@ -265,6 +265,7 @@ class DataFormattingPipeline:
             col("_id").cast(StringType()).alias("site_id"),
             col("name").cast(StringType()).alias("facility_name"),
             col("institution_name").cast(StringType()).alias("institution_name"),
+            col("addresses_district_id").cast(IntegerType()).alias("district_code"),
             # Location
             col("addresses_district_name").cast(StringType()).alias("district"),
             col("addresses_neighborhood_name").cast(StringType()).alias("neighborhood"),
