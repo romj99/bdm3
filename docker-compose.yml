@@ -38,10 +38,6 @@ services:
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-      # Data paths - consistent across all services
-      - LANDING_ZONE=/data_zones/01_landing
-      - FORMATTED_ZONE=/data_zones/02_formatted
-      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: airflow standalone
 
   streamlit:
@@ -62,8 +58,4 @@ services:
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-      # Data paths - consistent across all services
-      - LANDING_ZONE=/data_zones/01_landing
-      - FORMATTED_ZONE=/data_zones/02_formatted
-      - EXPLOITATION_ZONE=/data_zones/03_exploitation
     command: streamlit run app.py --server.port 8501 --server.enableCORS=false
