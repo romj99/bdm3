@@ -36,7 +36,7 @@ services:
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
@@ -58,7 +58,7 @@ services:
     env_file:
       - .env
     environment:
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64  # Standardize on Java 17
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
