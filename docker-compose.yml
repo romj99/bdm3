@@ -14,7 +14,9 @@ services:
       - .env
       
   airflow:
-    image: apache/airflow:3.0.2-python3.11
+    build:
+      context: ./src/airflow
+      dockerfile: Dockerfile
     container_name: airflow
     restart: always
     depends_on:
@@ -22,7 +24,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./src/dags:/opt/airflow/dags
+      - ./src/airflow/dags:/opt/airflow/dags
       - ./src/pipelines:/opt/airflow/plugins
     env_file:
       - .env
