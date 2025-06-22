@@ -15,7 +15,22 @@
 </p>
 
 ---
+## 📑 Index
 
+- [Assignment Completion Overview](#-assignment-completion-overview)
+- [Project Architecture](#-project-architecture)
+- [Selected Datasets & KPIs](#-selected-datasets--kpis)
+- [Technology Stack](#-technology-stack)
+- [Quick Start](#-quick-start)
+- [Assignment Task Implementation](#-assignment-task-implementation)
+- [Project Structure](#-project-structure)
+- [Development Setup](#-development-setup)
+- [Key Features & Innovations](#-key-features--innovations)
+- [Assignment Deliverables](#-assignment-deliverables)
+- [App Overview](#-app-overview)
+- [Important Notes](#-important-notes)
+
+---
 ## 📋 Assignment Completion Overview
 
 This project implements all requirements from **Lab 3: Spark** assignment:
@@ -36,7 +51,6 @@ This project implements all requirements from **Lab 3: Spark** assignment:
 
 - **Orchestration Framework** ➜ [Apache Airflow DAGs for complete pipeline automation](./src/airflow/dags/)
 
----
 
 ## 🧠 Project Architecture
 
@@ -63,7 +77,6 @@ graph TD
     G -->|Orchestrates| C
 ```
 
----
 
 ## 📊 Selected Datasets & KPIs
 
@@ -104,7 +117,6 @@ Our analysis focuses on **housing affordability, socioeconomic equity, and urban
 
 > 📄 **Detailed KPI documentation**: [Dataset Selection and KPI Definition notebook](/notebooks/a1.ipynb)
 
----
 
 ## 🛠️ Technology Stack
 
@@ -117,7 +129,6 @@ Our analysis focuses on **housing affordability, socioeconomic equity, and urban
 | **Visualization** | Streamlit | Latest | Interactive dashboards and data exploration |
 | **Containerization** | Docker & Docker Compose | Latest | Reproducible deployment |
 
----
 
 ## 🚀 Quick Start
 
@@ -156,7 +167,6 @@ docker-compose up --build
 3. **Monitor progress** through Airflow UI
 4. **Explore results** in Streamlit dashboards and MLflow experiments
 
----
 
 ## 📋 Assignment Task Implementation
 
@@ -209,7 +219,7 @@ docker-compose up --build
 - **Features**: Complete pipeline automation with dependencies, error handling, notifications
 - **Compatibility**: Airflow 3.0+ with modern TaskFlow API and DAG versioning
 
----
+
 
 ## 📁 Project Structure
 
@@ -259,7 +269,7 @@ bdm3/
 └── 📖 README.md            # This file
 ```
 
----
+
 
 ## 🔧 Development Setup
 
@@ -285,7 +295,7 @@ python src/airflow/dags/pipelines/a3.py  # Data Exploitation
 python src/airflow/dags/pipelines/a4.py  # Data Validation
 ```
 
----
+
 
 ## 📈 Key Features & Innovations
 
@@ -319,7 +329,6 @@ python src/airflow/dags/pipelines/a4.py  # Data Validation
 - **Interactive data quality dashboards** with real-time metrics
 - **Integrated tool access** (Airflow/MLflow) through embedded interfaces
 
----
 
 ## 🎯 Assignment Deliverables
 
@@ -337,11 +346,35 @@ python src/airflow/dags/pipelines/a4.py  # Data Validation
 - MLflow model management pipeline (B.2)  
 - Complete Airflow orchestration (Bonus)
 
+## App Overview
+
+### Zones
 ---
+
+![Landing Zone](./latex/imgs/app/landing_zone.png)
+![Formatted Zone](./latex/imgs/app/formatted_zone.png)
+![Exploitation Zone](./latex/imgs/app/exploitation_zone.png)
+
+### Airflow Job Scheduleer
+---
+![Ariflow Dags](./latex/imgs/app/airflow_dags.png)
+![Ariflow Pipeline](./latex/imgs/app/airflow_data_pipeline.png)
+
+### MLFlow Experiments
+---
+![MLFLow Experiments](./latex/imgs/app/mlflow_experiments.png)
+![MLFLow Models](./latex/imgs/app/mlflow_registered_models.png)
+
+### Data Sanity Dashboard
+---
+![Data sanity Dashboard](./latex/imgs/app/data_sanity_dashboard.png)
+
+
+
 
 ## 🚨 Important Notes
 
-> ⚠️ **Data Requirements**: Upload datasets to Landing Zone via Streamlit interface before running pipelines or manually coping it into [`data_zones/01_landing/`](./data_zones/01_landing/)
+> ⚠️ **Data Requirements**: The repository already conuts with the initial data [`data_zones/01_landing/`](./data_zones/01_landing/) in order to facilitate running the pipelines.
 
 > ⚠️ **Service Dependencies**: MLflow and Airflow services must be running for full functionality  
 
