@@ -7,6 +7,8 @@ from pyspark.ml import Pipeline
 from pyspark.ml.feature import VectorAssembler, StringIndexer
 from pyspark.ml.regression import LinearRegression, RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
+from mlflow.models.signature import infer_signature
+
 
 # --- Config ---
 
@@ -80,7 +82,24 @@ def main():
 
             mlflow.log_param("model_type", name)
             mlflow.log_metric("rmse", rmse)
-            mlflow.spark.log_model(pipeline_model, artifact_path="model")
+
+            input_example_df = train_df.limit(5).toPandas()
+
+            # Convert any DenseVectors in 'features' column to list
+            if "features" in input_example_df.columns:
+                input_example_df["features"] = input_example_df["features"].apply(lambda v: v.toArray().tolist())
+
+            # Generate output example (optional for better signature)
+            predictions_df = pipeline_model.transform(train_df.limit(5))
+            output_example_df = predictions_df.select("prediction").toPandas()
+
+            # Log the model
+            mlflow.spark.log_model(
+                spark_model=pipeline_model,
+                artifact_path="model",
+                input_example=input_example_df,
+                signature=infer_signature(input_example_df, output_example_df)
+            )
 
             print(f"{name} RMSE: {rmse:.2f}")
 
