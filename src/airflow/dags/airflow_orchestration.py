@@ -1,6 +1,6 @@
 """
-Apache Airflow 3.0+ Optimized Barcelona Data Pipeline
-Orchestrates A2 (Data Formatting) and A3 (Data Exploitation) tasks
+Apache Airflow 3.0+ Optimized Barcelona Data Pipeline with Data Validation
+Orchestrates A2 (Data Formatting), A3 (Data Exploitation), and A4 (Data Validation) tasks
 
 This DAG leverages Airflow 3.0 features:
 - Task SDK with airflow.sdk imports
@@ -26,8 +26,43 @@ from airflow.providers.standard.operators.bash import BashOperator
 
 # Airflow 3.0+ imports using the new Task SDK
 from airflow.sdk import dag, task
-from a2 import DataFormattingPipeline
-from a3 import ExploitationPipeline
+
+# Import your pipeline classes with error handling
+dag_folder = conf.get("core", "dags_folder")
+pipelines_path = os.path.join(dag_folder, "pipelines")
+if pipelines_path not in sys.path:
+    sys.path.append(pipelines_path)
+
+try:
+    from pipelines.a2 import DataFormattingPipeline
+    from pipelines.a3 import ExploitationPipeline
+    from pipelines.a4 import DataValidationPipeline
+except ImportError as e:
+    logging.warning(f"Could not import pipeline classes: {e}")
+    logging.warning("Make sure a2.py, a3.py, and a4.py are in the pipelines/ directory")
+
+    # Create dummy classes for DAG parsing
+    class DataFormattingPipeline:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def run_pipeline(self):
+            return {}
+
+    class ExploitationPipeline:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def run_pipeline(self):
+            return {}
+
+    class DataValidationPipeline:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def run_pipeline(self):
+            return {}
+
 
 # DAG Configuration
 LANDING_ZONE_PATH = os.getenv("LANDING_ZONE", "/opt/airflow/data/landing_zone")
@@ -35,40 +70,63 @@ FORMATTED_ZONE_PATH = os.getenv("FORMATTED_ZONE", "/opt/airflow/data/formatted_z
 EXPLOITATION_ZONE_PATH = os.getenv(
     "EXPLOITATION_ZONE", "/opt/airflow/data/exploitation_zone"
 )
+OUTPUT_PATH = os.getenv("OUTPUT_PATH", "/opt/airflow/data/outputs")
 NOTIFICATION_EMAIL = os.getenv("EMAIL", "admin@company.com")
 
 
 # Define the DAG using Airflow 3.0 @dag decorator
 @dag(
-    dag_id="bcn_data_pipeline",
-    description="Barcelona Data Processing Pipeline - Optimized for Airflow 3.0+",
+    dag_id="bcn_data_pipeline_with_validation",
+    description="Barcelona Data Processing Pipeline with Validation - Optimized for Airflow 3.0+",
     start_date=datetime(2025, 1, 1),
     schedule=None,  # Use Assets for event-driven scheduling or set schedule as needed
     catchup=False,
     max_active_runs=1,
-    tags=["barcelona", "real-estate", "spark", "delta-lake", "airflow-3.0"],
+    tags=[
+        "barcelona",
+        "real-estate",
+        "spark",
+        "delta-lake",
+        "data-validation",
+        "airflow-3.0",
+    ],
     default_args={
         "owner": "ju-mo",
         "depends_on_past": False,
         "email_on_failure": True,
         "email_on_retry": False,
-        "retries": 1,
+        "retries": 2,
         "retry_delay": timedelta(minutes=5),
         "email": [NOTIFICATION_EMAIL],
     },
+    # Airflow 3.0 specific configurations
+    doc_md="""
+    ## Barcelona Data Pipeline with Validation - Airflow 3.0
+    
+    This pipeline processes Barcelona housing, income, and cultural data through:
+    1. **Landing Zone Validation** - Ensures raw data availability
+    2. **Data Formatting (A2)** - Converts raw data to standardized Delta tables
+    3. **Data Exploitation (A3)** - Creates analytics datasets for KPI calculations
+    4. **Data Validation (A4)** - Comprehensive quality checks and report generation
+    
+    ### Key Features:
+    - ✅ Airflow 3.0 Task SDK compatibility
+    - ✅ Modern TaskFlow API with decorators
+    - ✅ Comprehensive data validation and quality monitoring
+    - ✅ Automated report generation for Streamlit dashboard
+    - ✅ Error handling and notifications
+    - ✅ DAG versioning support
+    """,
 )
-def bcn_data_pipeline():
+def bcn_data_pipeline_with_validation():
     """
-    Barcelona Data Processing Pipeline using Airflow 3.0+ features.
+    Barcelona Data Processing Pipeline with Validation using Airflow 3.0+ features.
 
-    This DAG demonstrates modern Airflow patterns:
-    - TaskFlow API with @task decorators
-    - Proper error handling and validation
-    - Data passing between tasks via return values
-    - Comprehensive logging and monitoring
+    This DAG demonstrates modern Airflow patterns including comprehensive
+    data validation and quality monitoring with automated reporting.
     """
 
-    @task(task_id="validate_landing_zone", retries=0, retry_delay=timedelta(minutes=2))
+    @task(task_id="validate_landing_zone", retries=1, retry_delay=timedelta(minutes=2))
     def validate_landing_zone() -> Dict[str, Any]:
         """
         Validate that required datasets exist in landing zone.
@@ -100,7 +158,7 @@ def bcn_data_pipeline():
                     "file_count": 0,
                     "path": str(dataset_path),
                 }
-                logging.warning(f"❌ {dataset}: Directory not found")
+                logging.error(f"❌ {dataset}: Directory not found")
 
         # Check if all required datasets are available
         missing_datasets = [
@@ -116,7 +174,7 @@ def bcn_data_pipeline():
     @task(
         task_id="run_data_formatting",
         execution_timeout=timedelta(hours=2),
-        retries=0,
+        retries=2,
         retry_delay=timedelta(minutes=10),
     )
     def run_data_formatting(validation_results: Dict[str, Any]) -> Dict[str, Any]:
@@ -156,7 +214,7 @@ def bcn_data_pipeline():
             logging.error(f"❌ A2 Pipeline failed: {str(e)}")
             raise AirflowException(f"Data formatting pipeline failed: {str(e)}")
 
-    @task(task_id="validate_formatted_zone", retries=0)
+    @task(task_id="validate_formatted_zone", retries=1)
     def validate_formatted_zone(formatting_results: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate formatted zone data quality.
@@ -224,7 +282,7 @@ def bcn_data_pipeline():
     @task(
         task_id="run_data_exploitation",
         execution_timeout=timedelta(hours=2),
-        retries=0,
+        retries=2,
         retry_delay=timedelta(minutes=10),
     )
     def run_data_exploitation(validation_results: Dict[str, Any]) -> Dict[str, Any]:
@@ -272,7 +330,7 @@ def bcn_data_pipeline():
             logging.error(f"❌ A3 Pipeline failed: {str(e)}")
             raise AirflowException(f"Data exploitation pipeline failed: {str(e)}")
 
-    @task(task_id="validate_exploitation_zone", retries=0)
+    @task(task_id="validate_exploitation_zone", retries=1)
     def validate_exploitation_zone(
         exploitation_results: Dict[str, Any],
     ) -> Dict[str, Any]:
@@ -339,31 +397,78 @@ def bcn_data_pipeline():
 
         return validation_results
 
+    @task(
+        task_id="run_data_validation",
+        execution_timeout=timedelta(hours=1),
+        retries=2,
+        retry_delay=timedelta(minutes=5),
+    )
+    def run_data_validation(
+        exploitation_validation: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Execute A4 comprehensive data validation and quality assessment.
+
+        Args:
+            exploitation_validation: Results from exploitation zone validation
+
+        Returns:
+            Dict containing validation pipeline results including report location
+        """
+        logging.info("🔄 Starting A4 Data Validation Pipeline...")
+        logging.info(f"Prerequisites validated: {list(exploitation_validation.keys())}")
+
+        try:
+            pipeline = DataValidationPipeline(
+                formatted_zone_path=FORMATTED_ZONE_PATH,
+                exploitation_zone_path=EXPLOITATION_ZONE_PATH,
+                output_path=OUTPUT_PATH,
+            )
+
+            results = pipeline.run_pipeline()
+
+            # Log validation summary
+            logging.info("✅ A4 Validation completed:")
+            logging.info(f"   Status: {results['status']}")
+            logging.info(f"   Data Quality Score: {results['data_quality_score']:.1f}%")
+            logging.info(f"   Load Success Rate: {results['load_success_rate']:.1f}%")
+            logging.info(f"   Execution Time: {results['execution_time']:.2f}s")
+            logging.info(f"   Report Generated: {results['report_file']}")
+
+            return results
+
+        except Exception as e:
+            logging.error(f"❌ A4 Validation Pipeline failed: {str(e)}")
+            raise AirflowException(f"Data validation pipeline failed: {str(e)}")
+
     @task(task_id="generate_pipeline_report")
     def generate_pipeline_report(
         landing_validation: Dict[str, Any],
         formatting_results: Dict[str, Any],
         exploitation_results: Dict[str, Any],
+        validation_results: Dict[str, Any],
         **context,
     ) -> Dict[str, Any]:
         """
-        Generate comprehensive pipeline execution report.
+        Generate comprehensive pipeline execution report including validation results.
 
         Args:
             landing_validation: Landing zone validation results
             formatting_results: Data formatting results
             exploitation_results: Data exploitation results
+            validation_results: Data validation results
             context: Airflow context
 
         Returns:
             Dict containing comprehensive pipeline report
         """
-        logging.info("📊 Generating pipeline execution report...")
+        logging.info("📊 Generating comprehensive pipeline execution report...")
 
         # Generate report
         report = {
             "execution_date": context["ds"],
             "dag_run_id": context["dag_run"].run_id,
+            "pipeline_status": "SUCCESS",
             "landing_zone_datasets": len(landing_validation)
             if landing_validation
             else 0,
@@ -376,17 +481,22 @@ def bcn_data_pipeline():
                 for stats in (formatting_results or {}).values()
                 if isinstance(stats, dict) and "record_count" in stats
             ),
-            "status": "SUCCESS",
+            "data_validation": {
+                "status": validation_results.get("status", "UNKNOWN"),
+                "quality_score": validation_results.get("data_quality_score", 0),
+                "load_success_rate": validation_results.get("load_success_rate", 0),
+                "report_file": validation_results.get("report_file", ""),
+            },
             "timestamp": datetime.now().isoformat(),
         }
 
-        logging.info(f"📈 Pipeline Report: {report}")
+        logging.info(f"📈 Complete Pipeline Report: {report}")
         return report
 
     @task(task_id="send_success_notification")
     def send_success_notification(report: Dict[str, Any]) -> str:
         """
-        Send success notification with pipeline summary.
+        Send success notification with pipeline summary including validation results.
 
         Args:
             report: Pipeline execution report
@@ -396,8 +506,13 @@ def bcn_data_pipeline():
         """
         logging.info("📧 Sending success notification...")
 
+        validation_status = report["data_validation"]["status"]
+        quality_score = report["data_validation"]["quality_score"]
+
+        status_emoji = "✅" if validation_status == "PASSED" else "⚠️"
+
         message = f"""
-        ✅ Barcelona Data Pipeline executed successfully!
+        {status_emoji} Barcelona Data Pipeline executed successfully!
         
         📊 Summary:
         - Landing Zone Datasets: {report["landing_zone_datasets"]}
@@ -407,34 +522,44 @@ def bcn_data_pipeline():
         - Execution Date: {report["execution_date"]}
         - DAG Run ID: {report["dag_run_id"]}
         
-        🎯 All data processing stages completed without errors.
+        🔍 Data Validation Results:
+        - Validation Status: {validation_status}
+        - Data Quality Score: {quality_score:.1f}%
+        - Load Success Rate: {report["data_validation"]["load_success_rate"]:.1f}%
+        - Report Location: {report["data_validation"]["report_file"]}
+        
+        🎯 All data processing stages completed.
         📁 Check the exploitation zone for updated analytics datasets.
+        📊 View data quality dashboard in Streamlit for detailed insights.
         """
 
         logging.info(message)
         return "Notification sent successfully"
 
     # Define task dependencies using TaskFlow API
-    # The >> operator works with task objects returned by decorated functions
     landing_validation = validate_landing_zone()
     formatting_results = run_data_formatting(landing_validation)
     formatted_validation = validate_formatted_zone(formatting_results)
     exploitation_results = run_data_exploitation(formatted_validation)
     exploitation_validation = validate_exploitation_zone(exploitation_results)
 
-    # Generate report with all inputs
+    # New validation step
+    validation_results = run_data_validation(exploitation_validation)
+
+    # Generate report with all inputs including validation
     report = generate_pipeline_report(
-        landing_validation, formatting_results, exploitation_results
+        landing_validation, formatting_results, exploitation_results, validation_results
     )
 
     # Send notification
     notification = send_success_notification(report)
 
     # Final dependency chain
-    exploitation_validation >> report >> notification
+    validation_results >> report >> notification
+
 
 # Instantiate the DAG
-bcn_pipeline_dag = bcn_data_pipeline()
+bcn_pipeline_dag = bcn_data_pipeline_with_validation()
 
 # Optional: Add traditional operators for comparison/integration
 with bcn_pipeline_dag:
@@ -449,9 +574,10 @@ with bcn_pipeline_dag:
     cleanup_task
 
 # Log DAG configuration for debugging
-logging.info("🏗️ BCN Data Pipeline DAG (Airflow 3.0+) configured:")
+logging.info("🏗️ BCN Data Pipeline with Validation DAG (Airflow 3.0+) configured:")
 logging.info(f"  📂 Landing Zone: {LANDING_ZONE_PATH}")
 logging.info(f"  📂 Formatted Zone: {FORMATTED_ZONE_PATH}")
 logging.info(f"  📂 Exploitation Zone: {EXPLOITATION_ZONE_PATH}")
+logging.info(f"  📂 Output Path: {OUTPUT_PATH}")
 logging.info(f"  📧 Notification Email: {NOTIFICATION_EMAIL}")
-logging.info("  🆔 DAG ID: bcn_data_pipeline")
+logging.info("  🆔 DAG ID: bcn_data_pipeline_with_validation")

@@ -7,17 +7,24 @@ st.logo("imgs/logo_header.svg")
 # Your navigation
 pages = {
     "🏠 Landing Zone": [
-        st.Page("sections/landing.py", title="Landing Zone", default=True),
-        st.Page("sections/data_explorer.py", title="Data Explorer"),
+        st.Page("sections/landing.py", title="Data Upload", default=True),
+        st.Page("sections/data_explorer.py", title=" Data Explorer"),
     ],
     "📦 Formatted Zone": [
         st.Page("sections/formatted.py", title="Formatted"),
     ],
-    "🧪 Experimentation": [
-        st.Page("sections/mlflow.py", title="MLFlow"),
+    "🏭 Exploitation Zone": [
+        st.Page("sections/exploitation.py", title="Exploitation"),
     ],
-    "⏱️ Scheduling": [
-        st.Page("sections/airflow.py", title="Airflow"),
+    "🩺 Data Quality": [
+        st.Page("sections/validation/data_sanity.py", title="Data Sanity"),
+        st.Page(
+            "sections/validation/pipeline_monitoring.py", title="Pipeline Monitoring"
+        ),
+    ],
+    "🏘️ External Tools": [
+        st.Page("sections/mlflow.py", title="🧪 MLFlow"),
+        st.Page("sections/airflow.py", title="⏱️ Airflow"),
     ],
 }
 
