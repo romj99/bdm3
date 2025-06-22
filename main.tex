@@ -1,29 +1,33 @@
 % Here starts the preamble
 \documentclass[12pt]{article}
-\input{LaTex/packages}
-\input{LaTex/commands}
+\input{latex/packages}
+\input{latex/commands}
 
 \begin{document}
 \pdfbookmark[0]{Titel page}{Titel page}
 \begin{titlepage}
 	\centering
-	\includesvg[width=0.75\textwidth]{LaTex/imgs/BSE Barcelona Graduate School of Economics.svg}\par\vspace{0.75cm}
+	\includesvg[width=0.75\textwidth]{latex/imgs/BSE Barcelona Graduate School of Economics.svg}\par\vspace{0.75cm}
 	{\huge\bfseries Assignment~\nass\par}
     {\large\bfseries Big Data Management - DSDM -~\gr\par}
 	\vspace{0.25cm}
     \noindent\rule{\textwidth}{1pt}
-    {\Large Julian Romero ()\par}
-	{\Large Moritz Peist (254017)\par}
+    {\Large Julian Romero\par}
+	{\Large Moritz Peist\par}
     \noindent\rule{\textwidth}{1pt}
 	\vfill
+    \tableofcontents
+    \vfill
     % Bottom of the page
 	{\large \today\par}
 \end{titlepage}
 
 % Contents
-\include*{LaTex/chapters/part1}
+\include*{latex/chapters/partA}
+\include*{latex/chapters/partB}
+\include*{latex/chapters/partC}
 
 \newpage
-\include{LaTex/appendix}
+\include{latex/appendix}
 
 \end{document}   
