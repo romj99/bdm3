@@ -15,23 +15,15 @@ Dependencies: apache-airflow>=3.0, pyspark, delta-spark
 
 import logging
 import os
-import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict
 
-from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.providers.standard.operators.bash import BashOperator
 
 # Airflow 3.0+ imports using the new Task SDK
 from airflow.sdk import dag, task
-
-# Import your pipeline classes with error handling
-dag_folder = conf.get("core", "dags_folder")
-pipelines_path = os.path.join(dag_folder, "pipelines")
-if pipelines_path not in sys.path:
-    sys.path.append(pipelines_path)
 
 try:
     from pipelines.a2 import DataFormattingPipeline
@@ -40,28 +32,6 @@ try:
 except ImportError as e:
     logging.warning(f"Could not import pipeline classes: {e}")
     logging.warning("Make sure a2.py, a3.py, and a4.py are in the pipelines/ directory")
-
-    # Create dummy classes for DAG parsing
-    class DataFormattingPipeline:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def run_pipeline(self):
-            return {}
-
-    class ExploitationPipeline:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def run_pipeline(self):
-            return {}
-
-    class DataValidationPipeline:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def run_pipeline(self):
-            return {}
 
 
 # DAG Configuration
