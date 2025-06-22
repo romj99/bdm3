@@ -20,14 +20,14 @@
 - [Assignment Completion Overview](#-assignment-completion-overview)
 - [Project Architecture](#-project-architecture)
 - [Selected Datasets & KPIs](#-selected-datasets--kpis)
-- [Technology Stack](#-technology-stack)
+- [Technology Stack](#️-technology-stack)
 - [Quick Start](#-quick-start)
 - [Assignment Task Implementation](#-assignment-task-implementation)
 - [Project Structure](#-project-structure)
 - [Development Setup](#-development-setup)
 - [Key Features & Innovations](#-key-features--innovations)
 - [Assignment Deliverables](#-assignment-deliverables)
-- [App Overview](#-app-overview)
+- [App Overview](#app-overview)
 - [Important Notes](#-important-notes)
 
 ---
