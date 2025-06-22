@@ -1,6 +1,6 @@
 <h1 align="center">🚀 BDM Lab 3: Data Lake Architecture with Spark, MLflow & Airflow</h1>
 <p align="center">
-  <b>Julian Romero & Moritz Peist</b><br>
+  <b><i>L3-T01</i>: Julian Romero & Moritz Peist</b><br>
   <img src="./src/streamlit_ui/imgs/logo_header.svg"><br>
   Big Data Management for Data Science (23D020)
 </p>
@@ -219,6 +219,11 @@ bdm3/
 │   ├── 01_landing/            # A.2: Raw data ingestion
 │   ├── 02_formatted/          # A.3: Standardized Delta tables  
 │   └── 03_exploitation/       # A.4: Analytics-ready datasets
+│
+├── 📓 latex/              # A.1: Exploratory Analysis
+│   ├── ...
+│   ├── ...
+│   └── latex files for documentation
 │
 ├── 📓 notebooks/              # A.1: Exploratory Analysis
 │   ├── a1.ipynb             # Data exploration & KPI selection
