@@ -1,6 +1,13 @@
 \section*{Overview}
 
-This report documents the implementation of Parts A (Data Management Backbone) and C (Orchestration Framework) of Lab 3. Our solution implements a comprehensive data lake architecture using PySpark 4.0, Delta Lake, MLFlow, and Apache Airflow 3.0 to process Barcelona's Open Data for real estate and socioeconomic analysis. All outputs are bundled in a comprehensive Streamlit application, providing an interface to our services and analysis (cf. \verb|README.md|).
+This report documents the implementation of Parts A (Data Management Backbone) and C (Orchestration Framework) of Lab 3. Our solution implements a comprehensive data lake architecture using PySpark 4.0, Delta Lake, MLFlow, and Apache Airflow 3.0 to process Barcelona's Open Data for real estate and socioeconomic analysis. All outputs are bundled in a comprehensive Streamlit application, providing an interface to our services and analysis (cf. \verb|README.md|). In the following, we sketch our data pipelines (cf. \figureref{fig:pipe_abs}):
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.8\linewidth]{latex/imgs/pipeline_abstraction.pdf}
+    \caption{Abstract pipeline sketch}
+    \label{fig:pipe_abs}
+\end{figure}
 
 \section{Data Management Backbone}
 
