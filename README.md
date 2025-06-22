@@ -61,6 +61,14 @@ graph TD
     G[Airflow] -->|Orchestrates| A
     G -->|Orchestrates| B
     G -->|Orchestrates| C
+
+    click A "./data_zones/01_landing" "Landing Zone: Raw data ingestion"
+    click B "./data_zones/02_formatted" "Formatted Zone: Standardized Delta tables"
+    click C "./data_zones/03_exploitation" "Exploitation Zone: Analytics-ready datasets"
+    click D "./outputs/" "Quality Reports: Validation outputs"
+    click E "./src/streamlit_ui/" "Streamlit Dashboards: Interactive data exploration"
+    click F "./src/ml_experiments/" "MLflow Models: Predictive analysis"
+    click G "./src/airflow/dags/" "Airflow: Pipeline orchestration"
 ```
 
 ---
