@@ -9,7 +9,7 @@ services:
       - MLFLOW_TRACKING_URI=http://0.0.0.0:5001
     command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlruns
     volumes:
-      - ./outputs/mlruns:/mlruns
+      - ./outputs:/outputs  # Fixed: Mount entire outputs directory
       - ./data_zones:/data_zones
     env_file:
       - .env
@@ -31,12 +31,12 @@ services:
       - ./src/pipelines:/opt/airflow/plugins
       - ./data_zones:/data_zones
       - ./src/utils:/opt/airflow/utils
+      - ./outputs:/outputs  # Added: Mount outputs directory
     env_file:
       - .env
     environment:
       - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.auth.managers.fab.auth_manager.AuthManager
       - AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS=True
-      # JAVA_HOME is auto-detected in the Dockerfile - no need to set here
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
@@ -52,17 +52,16 @@ services:
       - ./src/streamlit_ui:/app
       - ./src/utils:/app/utils 
       - ./data_zones:/data_zones
+      - ./outputs:/outputs  # Added: Mount outputs directory
     depends_on:
       - airflow
       - mlflow
     env_file:
       - .env
     environment:
-      # JAVA_HOME is auto-detected in the Dockerfile - no need to set here
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
-    # Command is handled in Dockerfile CMD with environment loading
     networks:
       - ml_platform
 

@@ -23,8 +23,8 @@ pages = {
         ),
     ],
     "🏘️ External Tools": [
-        st.Page("sections/mlflow.py", title="🧪 MLFlow"),
         st.Page("sections/airflow.py", title="⏱️ Airflow"),
+        st.Page("sections/mlflow.py", title="🧪 MLFlow"),
     ],
 }
 

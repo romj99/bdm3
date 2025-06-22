@@ -70,7 +70,7 @@ FORMATTED_ZONE_PATH = os.getenv("FORMATTED_ZONE", "/opt/airflow/data/formatted_z
 EXPLOITATION_ZONE_PATH = os.getenv(
     "EXPLOITATION_ZONE", "/opt/airflow/data/exploitation_zone"
 )
-OUTPUT_PATH = os.getenv("OUTPUT_PATH", "/opt/airflow/data/outputs")
+OUTPUT_PATH = os.getenv("OUTPUT_PATH", "/outputs")
 NOTIFICATION_EMAIL = os.getenv("EMAIL", "admin@company.com")
 
 

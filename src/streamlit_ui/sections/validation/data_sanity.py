@@ -335,7 +335,7 @@ st.markdown(
 )
 
 # Load validation report
-output_path = os.getenv("OUTPUT_PATH", "outputs")
+output_path = os.getenv("OUTPUT_PATH", "/outputs")
 report_path = f"{output_path}/data_validation_report.json"
 
 report = load_validation_report(report_path)

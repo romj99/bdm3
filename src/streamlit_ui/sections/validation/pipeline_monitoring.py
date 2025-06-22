@@ -239,48 +239,6 @@ def display_real_system_status():
             st.metric("Free Space", f"{disk_free:.1f} GB")
 
 
-def display_real_airflow_status():
-    """Display real Airflow status."""
-    st.subheader("🌊 Airflow Connection Status")
-
-    airflow_url = os.getenv("AIRFLOW_URI", "http://localhost:8080")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("#### Connection Info")
-        st.code(f"Airflow URL: {airflow_url}")
-
-        if st.button("🔌 Test Airflow Connection"):
-            with st.spinner("Testing connection..."):
-                dag_status = get_airflow_dag_status()
-
-                if "error" in dag_status:
-                    st.error(f"❌ Connection failed: {dag_status['error']}")
-                    st.info(
-                        "💡 Make sure Airflow is running: `docker-compose up airflow`"
-                    )
-                else:
-                    st.success("✅ Connected to Airflow!")
-                    st.json(dag_status.get("total_entries", "Connected"))
-
-    with col2:
-        st.markdown("#### Quick Actions")
-
-        col_a, col_b = st.columns(2)
-        with col_a:
-            if st.button("🚀 Open Airflow"):
-                st.markdown(f"[Open Airflow Dashboard]({airflow_url})")
-
-        with col_b:
-            if st.button("📊 DAG Status"):
-                dag_status = get_airflow_dag_status()
-                if "error" not in dag_status:
-                    st.success("DAG accessible via API")
-                else:
-                    st.error("DAG not accessible")
-
-
 def display_real_validation_history():
     """Display real validation report history."""
     st.subheader("📊 Real Validation History")
@@ -484,10 +442,6 @@ st.divider()
 
 # Real system status
 display_real_system_status()
-st.divider()
-
-# Real Airflow status
-display_real_airflow_status()
 st.divider()
 
 # Real validation history
