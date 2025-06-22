@@ -81,15 +81,20 @@ def train():
             mlflow.log_param("model_type", name)
             mlflow.log_metric("rmse", rmse)
 
-            input_example_df = train_df.limit(5).toPandas()
+            input_example_df = train_df.select("features").limit(5).toPandas()
+
 
             # Convert any DenseVectors in 'features' column to list
             if "features" in input_example_df.columns:
                 input_example_df["features"] = input_example_df["features"].apply(lambda v: v.toArray().tolist())
+            
+            #print columns of input_example_df
+            print("Input example columns:", input_example_df.columns)
 
             # Generate output example (optional for better signature)
             predictions_df = pipeline_model.transform(train_df.limit(5))
             output_example_df = predictions_df.select("prediction").toPandas()
+
 
             # Log the model
             mlflow.spark.log_model(
