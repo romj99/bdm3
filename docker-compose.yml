@@ -15,6 +15,8 @@ services:
       - .env
     networks:
       - ml_platform
+    user: "0:0"  # optional: run as root inside container to avoid permission issues
+
       
   airflow:
     build:
@@ -31,7 +33,8 @@ services:
       - ./src/pipelines:/opt/airflow/plugins
       - ./data_zones:/data_zones
       - ./src/utils:/opt/airflow/utils
-      - ./outputs:/outputs  # Added: Mount outputs directory
+      - ./src/ml_experiments:/opt/airflow/ml_experiments
+      - ./outputs/mlruns:/mlruns
     env_file:
       - .env
     environment:
@@ -40,6 +43,8 @@ services:
       - SPARK_VERSION=4.0.0
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=python3
+      - PYTHONPATH=/opt/airflow:/opt/airflow/ml_experiments
+      - MLFLOW_URI=http://mlflow:5001
     command: bash -c "source /etc/environment && airflow standalone"
     networks:
       - ml_platform
