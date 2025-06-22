@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 3: Pipeline Data Flow Charts</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            font-size: 11px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            margin: 0;
+            font-size: 11px;
+        }
+        
+        .pipeline-section {
+            margin-bottom: 35px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .pipeline-title {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .flowchart {
+            padding: 20px;
+            background: #fafbfc;
+        }
+        
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        
+        .data-node {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 10px 15px;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .data-node.input {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+        
+        .data-node.output {
+            background: #e8f5e8;
+            border-color: #4caf50;
+        }
+        
+        .process-node {
+            background: linear-gradient(135deg, #ff7043, #f4511e);
+            color: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .process-node.a2 {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .process-node.a3 {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .process-node.a4 {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+        
+        .node-title {
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        
+        .node-subtitle {
+            font-size: 9px;
+            opacity: 0.9;
+            line-height: 1.2;
+        }
+        
+        .operations-list {
+            font-size: 8px;
+            opacity: 0.85;
+            margin-top: 5px;
+            line-height: 1.3;
+        }
+        
+        .arrow {
+            font-size: 20px;
+            color: #34495e;
+            font-weight: bold;
+        }
+        
+        .arrow.down {
+            transform: rotate(90deg);
+        }
+        
+        .parallel-section {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            gap: 15px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .parallel-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .join-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        
+        .join-arrow::before,
+        .join-arrow::after {
+            content: '';
+            height: 2px;
+            width: 50px;
+            background: #7f8c8d;
+        }
+        
+        .join-arrow span {
+            background: #34495e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            margin: 0 10px;
+        }
+        
+        .validation-flows {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .validation-branch {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .flow-row, .parallel-section, .validation-flows {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .arrow:not(.down) {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Lab 3: Pipeline Data Flow Abstraction</h1>
+            <p>Data flow through grouped Spark operations for each pipeline</p>
+        </div>
+
+        <!-- Pipeline A.2: Data Formatting -->
+        <div class="pipeline-section">
+            <div class="pipeline-title">A.2: Data Formatting Pipeline - Data Flow</div>
+            <div class="flowchart">
+                <div class="flow-container">
+                    
+                    <!-- Input Data with Individual Processing -->
+                    <div class="parallel-section">
+                        <div class="parallel-flow">
+                            <div class="data-node input">
+                                <div class="node-title">Idealista.json</div>
+                                <div class="node-subtitle">21,389 records<br>Real estate data</div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="process-node a2">
+                                <div class="node-title">Real Estate Processing</div>
+                                <div class="operations-list">
+                                    spark.read.json(multiLine)<br>
+                                    price.cast(DoubleType)<br>
+                                    district standardization
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="parallel-flow">
+                            <div class="data-node input">
+                                <div class="node-title">Income.csv</div>
+                                <div class="node-subtitle">811 records<br>Socioeconomic data</div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="process-node a2">
+                                <div class="node-title">Income Processing</div>
+                                <div class="operations-list">
+                                    spark.read.csv(header)<br>
+                                    year.cast(IntegerType)<br>
+                                    null value handling
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="parallel-flow">
+                            <div class="data-node input">
+                                <div class="node-title">Cultural.csv</div>
+                                <div class="node-subtitle">871 records<br>Cultural facilities</div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="process-node a2">
+                                <div class="node-title">Cultural Sites Processing</div>
+                                <div class="operations-list">
+                                    spark.read.csv(header)<br>
+                                    coordinate validation<br>
+                                    geographic filtering
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Convergence -->
+                    <div class="join-arrow">
+                        <span>CONVERGE</span>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <!-- Transformation Layer -->
+                    <div class="process-node a2">
+                        <div class="node-title">Unified Data Standardization</div>
+                        <div class="operations-list">
+                            withColumn() - type casting • filter() - quality validation • select() - column mapping<br>
+                            dropDuplicates() • coalesce() - null handling • when().otherwise() - conditional logic
+                        </div>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <!-- Output -->
+                    <div class="flow-row">
+                        <div class="data-node output">
+                            <div class="node-title">Delta Tables</div>
+                            <div class="node-subtitle">
+                                partitionBy("district")<br>
+                                ACID transactions<br>
+                                Schema enforcement
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline A.3: Exploitation Zone -->
+        <div class="pipeline-section">
+            <div class="pipeline-title">A.3: Exploitation Zone Pipeline - Data Flow</div>
+            <div class="flowchart">
+                <div class="flow-container">
+                    
+                    <!-- Input -->
+                    <div class="data-node input">
+                        <div class="node-title">Formatted Delta Tables</div>
+                        <div class="node-subtitle">3 standardized datasets</div>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <!-- Data Loading -->
+                    <div class="process-node a3">
+                        <div class="node-title">Delta Lake Reader</div>
+                        <div class="operations-list">
+                            spark.read.format("delta").load() • cache() • createOrReplaceTempView()
+                        </div>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <!-- Parallel Analytics -->
+                    <div class="parallel-section">
+                        <div class="parallel-flow">
+                            <div class="process-node a3">
+                                <div class="node-title">Property Analytics</div>
+                                <div class="operations-list">
+                                    groupBy("district")<br>
+                                    agg(avg, count, min, max)<br>
+                                    price_per_sqm calculations
+                                </div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="data-node output">
+                                <div class="node-title">property_analytics</div>
+                            </div>
+                        </div>
+                        
+                        <div class="parallel-flow">
+                            <div class="process-node a3">
+                                <div class="node-title">Income Analytics</div>
+                                <div class="operations-list">
+                                    groupBy("district", "year")<br>
+                                    percentile_approx()<br>
+                                    inequality calculations
+                                </div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="data-node output">
+                                <div class="node-title">socioeconomic_analytics</div>
+                            </div>
+                        </div>
+                        
+                        <div class="parallel-flow">
+                            <div class="process-node a3">
+                                <div class="node-title">Cultural Analytics</div>
+                                <div class="operations-list">
+                                    groupBy("district", "category")<br>
+                                    spatial density calculations<br>
+                                    accessibility metrics
+                                </div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="data-node output">
+                                <div class="node-title">cultural_analytics</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Integration -->
+                    <div class="join-arrow">
+                        <span>JOIN</span>
+                    </div>
+
+                    <div class="process-node a3">
+                        <div class="node-title">Cross-Dataset Integration</div>
+                        <div class="operations-list">
+                            join(["district"], "left_outer") • broadcast() optimization • selectExpr() feature engineering
+                        </div>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <div class="data-node output">
+                        <div class="node-title">integrated_analytics + 6 more datasets</div>
+                        <div class="node-subtitle">9 analytical datasets total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline A.4: Data Validation -->
+        <div class="pipeline-section">
+            <div class="pipeline-title">A.4: Data Validation Pipeline - Data Flow</div>
+            <div class="flowchart">
+                <div class="flow-container">
+                    
+                    <!-- Parallel Input Sources -->
+                    <div class="validation-flows">
+                        <div class="validation-branch">
+                            <div class="data-node input">
+                                <div class="node-title">Formatted Zone</div>
+                                <div class="node-subtitle">3 Delta tables</div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="process-node a4">
+                                <div class="node-title">Schema Validation</div>
+                                <div class="operations-list">
+                                    dtypes inspection<br>
+                                    count() validation<br>
+                                    isNull().sum()
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="validation-branch">
+                            <div class="data-node input">
+                                <div class="node-title">Exploitation Zone</div>
+                                <div class="node-subtitle">9+ analytical datasets</div>
+                            </div>
+                            <div class="arrow down">→</div>
+                            <div class="process-node a4">
+                                <div class="node-title">Content Validation</div>
+                                <div class="operations-list">
+                                    record count checks<br>
+                                    show() sampling<br>
+                                    column validation
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Integration -->
+                    <div class="join-arrow">
+                        <span>VALIDATE</span>
+                    </div>
+
+                    <div class="process-node a4">
+                        <div class="node-title">KPI Calculations & Cross-Validation</div>
+                        <div class="operations-list">
+                            spark.sql() complex queries • join() relationship validation • agg() metric calculations • collect() results
+                        </div>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <div class="process-node a4">
+                        <div class="node-title">Quality Assessment</div>
+                        <div class="operations-list">
+                            toPandas() conversion • json.dumps() serialization • File I/O persistence
+                        </div>
+                    </div>
+
+                    <div class="arrow down">→</div>
+
+                    <div class="data-node output">
+                        <div class="node-title">Validation Reports</div>
+                        <div class="node-subtitle">
+                            JSON quality scores<br>
+                            KPI validations<br>
+                            Performance metrics
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
