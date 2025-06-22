@@ -7,13 +7,14 @@ from pyspark.ml import Pipeline
 from pyspark.ml.feature import VectorAssembler, StringIndexer
 from pyspark.ml.regression import LinearRegression, RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import col
 from mlflow.models.signature import infer_signature
+from delta import configure_spark_with_delta_pip
 
 
-# --- Config ---
-
-ZONE = os.getenv("EXPLOITATION_ZONE", "/opt/airflow/data/03_exploitation")
-DATA_PATH = ZONE + "/house_prices/house_prices.parquet"  # exact parquet file path
+ZONE = os.getenv("FORMATTED_ZONE")
+DATA_PATH = ZONE + "/idealista"
 
 MLFLOW_URI = os.environ.get("MLFLOW_URI")
 TARGET_COLUMN = "price"
@@ -22,54 +23,51 @@ print(f"Using MLFLOW_URI: {MLFLOW_URI}")
 MLFLOW_EXPERIMENT_NAME = "HousePriceRegression"
 MODEL_NAME = "house_price_model"
 
-def main():
-    spark = SparkSession.builder.appName("HousePriceRegressionTraining").getOrCreate()
-    df = spark.read.parquet(DATA_PATH)
+def train():
+    """ Train a regression model to predict house prices using Spark MLlib and log the model with MLflow."""
+    # Spark Session
+    builder = SparkSession.builder.appName("HousePriceRegressionTraining") \
+        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    spark = configure_spark_with_delta_pip(builder).getOrCreate()
 
-    # Drop 'id' since it's unique identifier, not a feature
-    df = df.drop("id")
+    # Load Data
+    df = spark.read.format("delta").load(DATA_PATH)
+    df = df.select(
+        'neighborhood', 'latitude', 'longitude', 'property_type', 'size_m2',
+        'rooms', 'bathrooms', 'floor', 'status', 'price_eur', 'is_exterior',
+        'has_lift', 'has_parking'
+    )
+    df = df.fillna({'neighborhood': 'unknown', "status": 'good', 'floor': 0})
+    df = df.withColumnRenamed("price_eur", "price")
+    df = df.filter(col("floor").rlike("^\d+$")).withColumn("floor", col("floor").cast(IntegerType()))
 
-    # Drop rows with nulls in features or target
-    feature_cols = [col for col in df.columns if col != TARGET_COLUMN]
-    df = df.na.drop(subset=feature_cols + [TARGET_COLUMN])
+    categorical_cols = ["neighborhood", "property_type", "status"]
+    indexers = [StringIndexer(inputCol=c, outputCol=f"{c}_idx", handleInvalid="skip") for c in categorical_cols]
+    numerical_cols = [c for c in df.columns if c not in categorical_cols + [TARGET_COLUMN]]
 
-    # Handle categorical column(s)
-    categorical_cols = ["neighbourhood"]
-    indexers = [StringIndexer(inputCol=col, outputCol=col + "_idx", handleInvalid="skip") for col in categorical_cols]
-    # Replace original categorical columns with indexed versions for features
-    feature_cols = [col for col in feature_cols if col not in categorical_cols] + [col + "_idx" for col in categorical_cols]
-
-    # VectorAssembler to combine features
+    feature_cols = numerical_cols + [f"{c}_idx" for c in categorical_cols]
     assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
 
-    # Prepare pipeline stages before model: indexers + assembler
-    stages = indexers + [assembler]
+    pre_pipeline = Pipeline(stages=indexers + [assembler])
+    df_transformed = pre_pipeline.fit(df).transform(df)
 
-    # --- Train/Validation Split ---
-    # We'll apply stages before split to avoid data leakage during indexing,
-    # so fit indexers and assembler on entire data first.
-    pipeline_prep = Pipeline(stages=stages)
-    df_prepped = pipeline_prep.fit(df).transform(df)
-
-    # Select final dataset with features and label
-    dataset = df_prepped.select("features", TARGET_COLUMN).withColumnRenamed(TARGET_COLUMN, "label")
-
+    dataset = df_transformed.select("features", TARGET_COLUMN).withColumnRenamed(TARGET_COLUMN, "label")
     train_df, val_df = dataset.randomSplit([0.8, 0.2], seed=42)
-    print("ACAAAA2...")
-    # --- Set Up MLflow ---
+
     mlflow.set_tracking_uri(MLFLOW_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 
     models = [
-        ("LinearRegression", LinearRegression(maxIter=50)),
-        ("RandomForestRegressor", RandomForestRegressor(numTrees=100))
+        ("LinearRegression", LinearRegression(maxIter=100)),
+        ("RandomForestRegressor", RandomForestRegressor(numTrees=100, maxBins=128))
     ]
-    print("ACAAAA3...")
     evaluator = RegressionEvaluator(metricName="rmse")
     best_rmse = float("inf")
     best_run_id = None
 
     print("Starting model training...")
+
 
     for name, model in models:
         with mlflow.start_run(run_name=name) as run:
@@ -109,7 +107,9 @@ def main():
     return best_run_id
 
 
+
 def auto_register_and_deploy_model(best_model_id: str = None):
+        """ Automatically register and deploy the best model from MLflow runs. """
         mlflow.set_tracking_uri(MLFLOW_URI)
         client = mlflow.tracking.MlflowClient()
 
@@ -140,4 +140,4 @@ def auto_register_and_deploy_model(best_model_id: str = None):
     
 
 if __name__ == "__main__":
-    main()
+    train()
