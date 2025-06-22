@@ -30,7 +30,6 @@ services:
       - "8080:8080"
     volumes:
       - ./src/airflow/dags:/opt/airflow/dags
-      - ./src/pipelines:/opt/airflow/plugins
       - ./data_zones:/data_zones
       - ./src/utils:/opt/airflow/utils
       - ./src/ml_experiments:/opt/airflow/ml_experiments
