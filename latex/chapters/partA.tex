@@ -1,6 +1,6 @@
 \section*{Overview}
 
-This report documents the implementation of Parts A (Data Management Backbone) and C (Orchestration Framework) of Lab 3. Our solution implements a comprehensive data lake architecture using PySpark 4.0, Delta Lake, MLFlow, and Apache Airflow 3.0 to process Barcelona's Open Data for real estate and socioeconomic analysis.
+This report documents the implementation of Parts A (Data Management Backbone) and C (Orchestration Framework) of Lab 3. Our solution implements a comprehensive data lake architecture using PySpark 4.0, Delta Lake, MLFlow, and Apache Airflow 3.0 to process Barcelona's Open Data for real estate and socioeconomic analysis. All outputs are bundled in a comprehensive Streamlit application, providing an interface to our services and analysis (cf. \verb|README.md|).
 
 \section{Data Management Backbone}
 
@@ -31,7 +31,7 @@ The formatting pipeline transforms raw data from Landing Zone into standardized 
 
 \textbf{Output:} \texttt{data\_zones/02\_formatted/} containing three Delta tables with enforced schemas and quality constraints.
 
-\subsection{A.3: Exploitation Zone Pipeline}
+\subsection{Exploitation Zone Pipeline}
 
 \textbf{Implementation:} \texttt{src/airflow/dags/pipelines/a3.py}
 
