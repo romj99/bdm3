@@ -374,7 +374,7 @@ python src/airflow/dags/pipelines/a4.py  # Data Validation
 
 ## 🚨 Important Notes
 
-> ⚠️ **Data Requirements**: The repository already conuts with the initial data [`data_zones/01_landing/`](./data_zones/01_landing/) in order to facilitate running the pipelines.
+> 💡 **Data Requirements**: The repository already conuts with the initial data [`data_zones/01_landing/`](./data_zones/01_landing/) in order to facilitate running the pipelines.
 
 > ⚠️ **Service Dependencies**: MLflow and Airflow services must be running for full functionality  
 
