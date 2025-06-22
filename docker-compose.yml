@@ -9,13 +9,12 @@ services:
       - MLFLOW_TRACKING_URI=http://0.0.0.0:5001
     command: mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /outputs/mlruns
     volumes:
-      - ./outputs:/outputs  # Fixed: Mount entire outputs directory
+      - ./outputs:/outputs
       - ./data_zones:/data_zones
     env_file:
       - .env
     networks:
       - ml_platform
-    user: "0:0"  # optional: run as root inside container to avoid permission issues
 
       
   airflow:
@@ -47,6 +46,7 @@ services:
     command: bash -c "source /etc/environment && airflow standalone"
     networks:
       - ml_platform
+    user: "0:0"  # optional: run as root inside container to avoid permission issues
 
   streamlit:
     build: ./src/streamlit_ui
@@ -56,7 +56,7 @@ services:
       - ./src/streamlit_ui:/app
       - ./src/utils:/app/utils 
       - ./data_zones:/data_zones
-      - ./outputs:/outputs  # Added: Mount outputs directory
+      - ./outputs:/outputs
     depends_on:
       - airflow
       - mlflow
