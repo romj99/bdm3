@@ -33,9 +33,11 @@
 
 ---
 
-## 📋 Assignment Completion Overview
+## 📋 Assignment Overview
 
-This project implements all requirements from **Lab 3: Spark** assignment:
+This project implements a complete data lake architecture using PySpark, Delta Lake, MLflow, and Airflow to analyze Barcelona housing market data through three-zone data processing (Landing → Formatted → Exploitation) with interactive dashboards and ML model management bunblded in a comprehensive output layer represented by Streamlit. Final Submission:
+
+- [L3-T01_submission.pdf](/L3-T01_submission.pdf).
 
 ### ✅ **Data Management Backbone** (Tasks A.1 - A.4)
 
@@ -260,8 +262,11 @@ bdm3/
 │   └── mlruns/             # MLflow tracking data
 │
 ├── 🐳 docker-compose.yml    # Service orchestration
-├── 📋 Dataset Selection and KPI Definition.md  # A.1 Documentation
-└── 📖 README.md            # This file
+├── 📄 L3-T01_submission.pdf    # Final submission document
+├── 📄 main.tex             # Latex code for final document
+├── ⌨️ pyproject.toml       # Python dependencies
+├── 📖 README.md            # This file
+└── ⌨️ uv.lock              # Python dependencies
 ```
 
 ## 🔧 Development Setup
