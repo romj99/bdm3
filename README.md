@@ -8,13 +8,14 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python">
   <img src="https://img.shields.io/badge/PySpark-4.0-orange?logo=apachespark&logoColor=white">
-  <img src="https://img.shields.io/badge/MLflow-3.0.0-blue?logo=mlflow">
+  <img src="https://img.shields.io/badge/MLflow-3.1.0-blue?logo=mlflow">
   <img src="https://img.shields.io/badge/Airflow-3.0.2-darkgreen?logo=apacheairflow">
   <img src="https://img.shields.io/badge/Streamlit-App-red?logo=streamlit">
   <img src="https://img.shields.io/badge/Delta_Lake-4.0-orange">
 </p>
 
 ---
+
 ## 📑 Index
 
 - [Assignment Completion Overview](#-assignment-completion-overview)
@@ -31,6 +32,7 @@
 - [Important Notes](#-important-notes)
 
 ---
+
 ## 📋 Assignment Completion Overview
 
 This project implements all requirements from **Lab 3: Spark** assignment:
@@ -50,7 +52,6 @@ This project implements all requirements from **Lab 3: Spark** assignment:
 ### ✅ **Bonus Point**
 
 - **Orchestration Framework** ➜ [Apache Airflow DAGs for complete pipeline automation](./src/airflow/dags/)
-
 
 ## 🧠 Project Architecture
 
@@ -76,7 +77,6 @@ graph TD
     G -->|Orchestrates| B
     G -->|Orchestrates| C
 ```
-
 
 ## 📊 Selected Datasets & KPIs
 
@@ -117,7 +117,6 @@ Our analysis focuses on **housing affordability, socioeconomic equity, and urban
 
 > 📄 **Detailed KPI documentation**: [Dataset Selection and KPI Definition notebook](/notebooks/a1.ipynb)
 
-
 ## 🛠️ Technology Stack
 
 | Component | Technology | Version | Purpose |
@@ -128,7 +127,6 @@ Our analysis focuses on **housing affordability, socioeconomic equity, and urban
 | **ML Tracking** | MLflow | 3.0.0 | Experiment tracking and model registry |
 | **Visualization** | Streamlit | Latest | Interactive dashboards and data exploration |
 | **Containerization** | Docker & Docker Compose | Latest | Reproducible deployment |
-
 
 ## 🚀 Quick Start
 
@@ -166,7 +164,6 @@ docker-compose up --build
 2. **Trigger pipeline** in Airflow: `bcn_data_pipeline_with_validation`
 3. **Monitor progress** through Airflow UI
 4. **Explore results** in Streamlit dashboards and MLflow experiments
-
 
 ## 📋 Assignment Task Implementation
 
@@ -219,8 +216,6 @@ docker-compose up --build
 - **Features**: Complete pipeline automation with dependencies, error handling, notifications
 - **Compatibility**: Airflow 3.0+ with modern TaskFlow API and DAG versioning
 
-
-
 ## 📁 Project Structure
 
 ```bash
@@ -269,8 +264,6 @@ bdm3/
 └── 📖 README.md            # This file
 ```
 
-
-
 ## 🔧 Development Setup
 
 ### Local Development (Optional)
@@ -294,8 +287,6 @@ python src/airflow/dags/pipelines/a2.py  # Data Formatting
 python src/airflow/dags/pipelines/a3.py  # Data Exploitation  
 python src/airflow/dags/pipelines/a4.py  # Data Validation
 ```
-
-
 
 ## 📈 Key Features & Innovations
 
@@ -329,7 +320,6 @@ python src/airflow/dags/pipelines/a4.py  # Data Validation
 - **Interactive data quality dashboards** with real-time metrics
 - **Integrated tool access** (Airflow/MLflow) through embedded interfaces
 
-
 ## 🎯 Assignment Deliverables
 
 ✅ **Three Python Scripts/Notebooks**:
@@ -349,6 +339,7 @@ python src/airflow/dags/pipelines/a4.py  # Data Validation
 ## App Overview
 
 ### Zones
+
 ---
 
 ![Landing Zone](./latex/imgs/app/landing_zone.png)
@@ -356,21 +347,21 @@ python src/airflow/dags/pipelines/a4.py  # Data Validation
 ![Exploitation Zone](./latex/imgs/app/exploitation_zone.png)
 
 ### Airflow Job Scheduleer
+
 ---
 ![Ariflow Dags](./latex/imgs/app/airflow_dags.png)
 ![Ariflow Pipeline](./latex/imgs/app/airflow_data_pipeline.png)
 
 ### MLFlow Experiments
+
 ---
 ![MLFLow Experiments](./latex/imgs/app/mlflow_experiments.png)
 ![MLFLow Models](./latex/imgs/app/mlflow_registered_models.png)
 
 ### Data Sanity Dashboard
+
 ---
 ![Data sanity Dashboard](./latex/imgs/app/data_sanity_dashboard.png)
-
-
-
 
 ## 🚨 Important Notes
 
