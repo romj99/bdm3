@@ -6,7 +6,12 @@
 Our orchestration solution provides production-ready pipeline management:
 
 \begin{itemize}[nosep]
-\item \textbf{DAG Architecture:} \texttt{bcn\_data\_pipeline\_with\_validation} orchestrates A.2 → A.3 → A.4 pipeline sequence
+\item \textbf{DAG Architecture:} 
+\begin{itemize}
+    \item \texttt{bcn\_data\_pipeline\_with\_validation} orchestrates A.2 → A.3 → A.4 pipeline sequence.
+    \item \texttt{train\_and\_deploy\_model} orchestrates B, from training to deployment.
+\end{itemize}
+
 \item \textbf{Dependency Management:} Asset-based scheduling ensures proper execution order and data availability
 \item \textbf{Error Handling:} Comprehensive failure recovery with email notifications and retry mechanisms
 \item \textbf{Monitoring Integration:} Real-time pipeline status through Airflow UI at \texttt{localhost:8080}
