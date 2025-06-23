@@ -1,1 +1,24 @@
-\section{}
+\section{Data Analysis Backbone}
+\subsection{Predictive Analysis via Model Training and Management}
+
+\textbf{Implementation:} Spark MLlib with MLflow model management and Airflow orchestration
+
+Our solution addresses the task of predictive model training and management as follows:
+
+\begin{itemize}[nosep]
+\item \textbf{Data Preparation:} We load and preprocess the Exploitation Zone data stored in Delta Lake, including feature engineering with Spark ML transformers (e.g., \texttt{StringIndexer}, \texttt{VectorAssembler}), and create two datasets (training and validation) via an 80/20 random split.
+\item \textbf{Model Training:} Two regression models are trained using Spark ML, particularly \texttt{LinearRegression} and \texttt{RandomForestRegressor}. Each model is trained on the training dataset and evaluated on the validation dataset.
+\item \textbf{Evaluation Metrics:} Model performance is measured by the RMSE (Root Mean Squared Error) metric, which is logged alongside hyperparameters and other metadata.
+\item \textbf{Model Management Framework:} MLflow is used extensively to log models, hyperparameters, and evaluation metrics. Each model run is tracked as an experiment under \texttt{HousePriceRegression}.
+\item \textbf{Ranking and Selection:} Models are automatically ranked by their RMSE on the validation set, with the best-performing model identified programmatically.
+\item \textbf{Automatic Deployment:} The best model is registered in the MLflow Model Registry and transitioned to the Production stage, archiving previous versions.
+\item \textbf{Orchestration:} Apache Airflow DAG \texttt{train\_and\_deploy\_model} automates the full pipeline: model training followed by automatic model registration and deployment, ensuring repeatability and operational robustness.
+\end{itemize}
+
+\bigskip
+
+\textbf{Code Location:}
+The core model training and MLflow integration are implemented in \texttt{src/ml\_experiments/house\_price\_prediction.py}. The Airflow DAG orchestrating the process is in \texttt{src/airflow/dags/train\_deploy.py}.
+
+\textbf{Output:} The outputs of the experiments are saved in \texttt{outputs/mlruns} directory.
+
